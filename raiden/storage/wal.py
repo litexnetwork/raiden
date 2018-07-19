@@ -63,3 +63,35 @@ class WriteAheadLog:
         # otherwise no state change was dispatched
         if state_change_id:
             self.storage.write_state_snapshot(state_change_id, current_state)
+
+####demo
+class CrossTransaction:
+    def __init__(self, state_manager, storage):
+        self.state_manager = state_manager
+        self.state_change_id = None
+        self.storage = storage
+
+    def crosstransactiontry(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status):
+        """ Log and apply a state change.
+
+        This function will first write the state change to the write-ahead-log,
+        in case of a node crash the state change can be recovered and replayed
+        to restore the node state.
+
+        Events produced by applying state change are also saved.
+        """
+
+        ###events = self.state_manager.dispatch(state_change)
+
+        identifier = self.storage.write_crosstransaction_events(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status)
+
+        return identifier
+
+    def get_crosstransaction(self,address):
+        """ Snapshot the application state.
+
+        Snapshots are used to restore the application state, either after a
+        restart or a crash.
+        """
+        transactions = self.storage.get_crosstransaction_events(address)
+        return transactions

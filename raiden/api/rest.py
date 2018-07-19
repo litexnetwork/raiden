@@ -43,6 +43,7 @@ from raiden.api.v1.encoding import (
     PartnersPerTokenListSchema,
     TransferSchema,
     InvalidEndpoint,
+    CrossTransactionSchema,
 )
 from raiden.api.v1.resources import (
     create_blueprint,
@@ -58,6 +59,7 @@ from raiden.api.v1.resources import (
     TransferToTargetResource,
     ConnectionsResource,
     ConnectionsInfoResource,
+    CrossTransactionTry,
 )
 from raiden.transfer import channel, views
 from raiden.transfer.state import (
@@ -108,6 +110,11 @@ URLS_V1 = [
     ),
     ('/connections/<hexaddress:token_address>', ConnectionsResource),
     ('/connections', ConnectionsInfoResource),
+
+###sqlite_demo
+    ('/crosstransactiontry',CrossTransactionTry),
+    ###('/crosstransactionagree',CrossTransactionAgree),
+    ###('/crosstransactionsend',CrossTransactionSend),
 ]
 
 
@@ -340,6 +347,8 @@ class RestAPI:
         self.address_list_schema = AddressListSchema()
         self.partner_per_token_list_schema = PartnersPerTokenListSchema()
         self.transfer_schema = TransferSchema()
+        #####sqlite_demo
+        self.crosstransaction_schema = CrossTransactionSchema()
 
     def get_our_address(self):
         return api_response(
@@ -780,3 +789,83 @@ class RestAPI:
             )
 
         return result
+
+
+######sqlite_demo
+    def get_crosstransaction_list(self, registry_address, token_address=None, partner_address=None):
+        raiden_service_result = self.raiden_api.get_crosstransaction_list(
+            registry_address,
+            token_address,
+            partner_address,
+        )
+        assert isinstance(raiden_service_result, list)
+        result = [
+            self.crosstransaction_schema.dump(crosstransaction_schema).data
+            for crosstransaction_schema in raiden_service_result
+        ]
+        return api_response(result=result)
+
+    def put_crossstransactiontry(
+            self,
+            registry_address,
+            partner_address,
+            token_address,
+            settle_timeout=None,
+            reveal_timeout=None,
+            balance=None,
+    ):
+
+        try:
+            self.raiden_api.crosstransaction_try(
+                registry_address,
+                token_address,
+                partner_address,
+                settle_timeout,
+                reveal_timeout,
+            )
+        except (InvalidAddress, InvalidSettleTimeout, SamePeerAddress,
+                AddressWithoutCode, DuplicatedChannelError) as e:
+            return api_error(
+                errors=str(e),
+                status_code=HTTPStatus.CONFLICT,
+            )
+
+        if balance:
+            # make initial deposit
+            try:
+                self.raiden_api.set_total_channel_deposit(
+                    registry_address,
+                    token_address,
+                    partner_address,
+                    balance,
+                )
+            except EthNodeCommunicationError as e:
+                return api_error(
+                    errors=str(e),
+                    status_code=HTTPStatus.REQUEST_TIMEOUT,
+                )
+            except InsufficientFunds as e:
+                return api_error(
+                    errors=str(e),
+                    status_code=HTTPStatus.PAYMENT_REQUIRED,
+                )
+            except DepositOverLimit as e:
+                return api_error(
+                    errors=str(e),
+                    status_code=HTTPStatus.EXPECTATION_FAILED,
+                )
+
+        channel_state = views.get_channelstate_for(
+            views.state_from_raiden(self.raiden_api.raiden),
+            registry_address,
+            token_address,
+            partner_address,
+        )
+
+        result = self.crosstransaction_schema.dump(channel_state)
+
+        return api_response(
+            result=result.data,
+            status_code=HTTPStatus.CREATED,
+        )
+

@@ -333,3 +333,33 @@ class ConnectionsLeaveSchema(BaseSchema):
     class Meta:
         strict = True
         decoding_class = dict
+
+
+
+####sqlite_demo
+
+class CrossTransactionSchema(BaseSchema):
+    channel_identifier = KeccakField(attribute='identifier')
+    token_network_identifier = AddressField()
+    token_address = AddressField()
+    partner_address = fields.Method('get_partner_address')
+    settle_timeout = fields.Integer()
+    reveal_timeout = fields.Integer()
+    balance = fields.Method('get_balance')
+    state = fields.Method('get_state')
+
+    def get_partner_address(self, channel_state):  # pylint: disable=no-self-use
+        return to_checksum_address(channel_state.partner_state.address)
+
+    def get_balance(self, channel_state):  # pylint: disable=no-self-use
+        return channel.get_balance(
+            channel_state.our_state,
+            channel_state.partner_state,
+        )
+
+    def get_state(self, channel_state):
+        return channel.get_status(channel_state)
+
+    class Meta:
+        strict = True
+        decoding_class = dict

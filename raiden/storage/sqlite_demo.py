@@ -1,6 +1,5 @@
 import sqlite3
 import threading
-from raiden.utils import sha3
 from raiden.exceptions import InvalidDBData
 from typing import (
     Any,
@@ -38,19 +37,6 @@ class SQLiteStorage:
                 '    block_number INTEGER NOT NULL, '
                 '    data BINARY, '
                 '    FOREIGN KEY(source_statechange_id) REFERENCES state_changes(identifier)'
-                ')',
-                #####demo
-            cursor.execute(
-                'CREATE TABLE IF NOT EXISTS crosstransaction_events ('
-                '    identifier INTEGER PRIMARY KEY, '
-                '    initiator_address VARCHAR, '
-                '    target_address VARCHAR, '
-                '    sendETH_amount INTEGER NOT NULL, '
-                '    sendBTC_amount INTEGER NOT NULL, '
-                '    receiveBTC_address VARCHAR, '
-                '    sendBTC_address VARCHAR, '
-                '    time DATE, '
-                '    status INTEGER NOT NULL, '
                 ')',
             )
 
@@ -250,46 +236,3 @@ class SQLiteStorage:
 
     def __del__(self):
         self.conn.close()
-
-######demo
-    def write_crosstransaction_events(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status ):
-        ###serialized_data = self.serializer.serialize(state_change)
-        identifier = sha3(initiator_address+target_address+receiveBTC_address+sendBTC_address+time)
-        with self.write_lock, self.conn:
-            self.conn.execute(
-                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status,),
-            )
-
-        return identifier
-
-    def get_crosstransaction_events(self, address):
-
-        cursor = self.conn.cursor()
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE initiator_address = ?',
-            (address,),
-        )
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE target_address = ?',
-            (address,),
-        )
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE receiveBTC_address = ?',
-            (address,),
-        )
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE sendBTC_address = ?',
-            (address,),
-        )
-
-        result = [
-            (entry[0], self.serializer.deserialize(entry[1]))
-            for entry in cursor.fetchall()
-        ]
-
-        return result

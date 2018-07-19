@@ -201,3 +201,25 @@ class ConnectionsInfoResource(BaseResource):
         return self.rest_api.get_connection_managers_info(
             self.rest_api.raiden_api.raiden.default_registry.address,
         )
+
+
+################sqlite_demo
+
+class CrossTransactionTry(BaseResource):
+
+    put_schema = ChannelPutSchema
+
+    def get(self):
+        """
+        this translates to 'get all channels the node is connected with'
+        """
+        return self.rest_api.get_crosstransaction_list(
+            self.rest_api.raiden_api.raiden.default_registry.address,
+        )
+
+    @use_kwargs(put_schema, locations=('json',))
+    def put(self, **kwargs):
+        return self.rest_api.put_crossstransactiontry(
+            registry_address=self.rest_api.raiden_api.raiden.default_registry.address,
+            **kwargs,
+        )

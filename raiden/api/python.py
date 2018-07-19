@@ -712,3 +712,63 @@ class RaidenAPI:
         return returned_events
 
     transfer = transfer_and_wait
+
+
+
+#####sqlite_demo
+    def crosstransaction_try(
+            self,
+            registry_address,
+            token_address,
+            partner_address,
+            settle_timeout=None,
+            reveal_timeout=None,
+            poll_timeout=DEFAULT_POLL_TIMEOUT,
+            retry_timeout=DEFAULT_RETRY_TIMEOUT,
+    ):
+        """ Open a channel with the peer at `partner_address`
+        with the given `token_address`.
+        """
+        if reveal_timeout is None:
+            reveal_timeout = self.raiden.config['reveal_timeout']
+
+        if settle_timeout is None:
+            settle_timeout = self.raiden.config['settle_timeout']
+
+        if settle_timeout <= reveal_timeout:
+            raise InvalidSettleTimeout(
+                'reveal_timeout can not be larger-or-equal to settle_timeout',
+            )
+
+        if not is_binary_address(registry_address):
+            raise InvalidAddress('Expected binary address format for registry in channel open')
+
+        if not is_binary_address(token_address):
+            raise InvalidAddress('Expected binary address format for token in channel open')
+
+        if not is_binary_address(partner_address):
+            raise InvalidAddress('Expected binary address format for partner in channel open')
+
+        registry = self.raiden.chain.token_network_registry(registry_address)
+        token_network_address = registry.get_token_network(token_address)
+        token_network = self.raiden.chain.token_network(token_network_address)
+
+        channel_identifier = token_network.new_netting_channel(
+            partner_address,
+            settle_timeout,
+        )
+
+        msg = 'After {} seconds the channel was not properly created.'.format(
+            poll_timeout,
+        )
+
+        with gevent.Timeout(poll_timeout, EthNodeCommunicationError(msg)):
+            waiting.wait_for_newchannel(
+                self.raiden,
+                registry_address,
+                token_address,
+                partner_address,
+                retry_timeout,
+            )
+
+        return channel_identifier
