@@ -65,13 +65,14 @@ class WriteAheadLog:
             self.storage.write_state_snapshot(state_change_id, current_state)
 
 ####demo
+####demo
 class CrossTransaction:
     def __init__(self, state_manager, storage):
         self.state_manager = state_manager
         self.state_change_id = None
         self.storage = storage
 
-    def crosstransactiontry(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status):
+    def create_crosstransactiontry(self,initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address):
         """ Log and apply a state change.
 
         This function will first write the state change to the write-ahead-log,
@@ -82,16 +83,36 @@ class CrossTransaction:
         """
 
         ###events = self.state_manager.dispatch(state_change)
+        ###identifier = sha3(initiator_address + target_address + receiveBTC_address)
+        ###initiator_address = raiden.api.v1.resources.AddressResource.get(self)
 
-        identifier = self.storage.write_crosstransaction_events(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status)
+        res = self.storage.create_crosstransaction(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, 1)
 
-        return identifier
+        return res
 
-    def get_crosstransaction(self,address):
+    def get_all_crosstransaction(self):
         """ Snapshot the application state.
 
         Snapshots are used to restore the application state, either after a
         restart or a crash.
         """
-        transactions = self.storage.get_crosstransaction_events(address)
+        transactions = self.storage.get_all_crosstransaction()
+        return transactions
+
+    def get_crosstransaction_by_identifier(self,identifier):
+        """ Snapshot the application state.
+
+        Snapshots are used to restore the application state, either after a
+        restart or a crash.
+        """
+        transactions = self.storage.get_crosstransaction_by_identifier(identifier)
+        return transactions
+
+    def change_crosstransaction_status(self,identifier,status):
+        """ Snapshot the application state.
+
+        Snapshots are used to restore the application state, either after a
+        restart or a crash.
+        """
+        transactions = self.storage.change_crosstransaction_status(identifier,status)
         return transactions

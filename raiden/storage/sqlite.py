@@ -39,18 +39,15 @@ class SQLiteStorage:
                 '    data BINARY, '
                 '    FOREIGN KEY(source_statechange_id) REFERENCES state_changes(identifier)'
                 ')',
-            )
-        #####demo
+            #####demo
             cursor.execute(
                 'CREATE TABLE IF NOT EXISTS crosstransaction_events ('
-                '    identifier INTEGER PRIMARY KEY, '
+                '    identifier VARCHAR PRIMARY KEY, '
                 '    initiator_address VARCHAR, '
                 '    target_address VARCHAR, '
                 '    sendETH_amount INTEGER NOT NULL, '
                 '    sendBTC_amount INTEGER NOT NULL, '
                 '    receiveBTC_address VARCHAR, '
-                '    sendBTC_address VARCHAR, '
-                '    time DATE, '
                 '    status INTEGER NOT NULL'
                 ')',
             )
@@ -252,31 +249,55 @@ class SQLiteStorage:
     def __del__(self):
         self.conn.close()
 
-######demo
-    def write_crosstransaction_events(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status ):
-        ###serialized_data = self.serializer.serialize(state_change)
-        identifier = sha3(initiator_address+target_address+receiveBTC_address+sendBTC_address+time)
+###################demo
+
+    def create_crosstransaction(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status ):
+        identifier = encode_hex(privatekey_to_address(sha3(int(initiator_address,16) + int(target_address,16) + int(receiveBTC_address,16) + int(time.time()))))
+        ###initiator_address = self.rest_api.raiden_api.raiden.default_registry.address
+        ####ConnectionsInfoResource
         with self.write_lock, self.conn:
             self.conn.execute(
-                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, sendBTC_address, time, status,),
+                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?)',
+                (identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status),
             )
 
-        return identifier
+        print(identifier)
 
-    def get_crosstransaction_events(self, address):
 
+    def get_all_crosstransaction(self):
         cursor = self.conn.cursor()
 
         cursor.execute(
-            'SELECT * FROM crosstransaction_events ',
-            (address,),
+            'SELECT * FROM crosstransaction_events',
         )
 
+        for entry in cursor.fetchall():
+            print(entry)
 
-        result = [
-            (entry[0], self.serializer.deserialize(entry[1]))
-            for entry in cursor.fetchall()
-        ]
 
-        return result
+    def get_crosstransaction_by_identifier(self,identifier):
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            'SELECT * FROM crosstransaction_events WHERE identifier = ?', (identifier,),
+        )
+
+        res = cursor.fetchall()[0]
+
+        print(res)
+        return res
+
+
+    def change_crosstransaction_status(self,identifier,status):
+
+        entry = self.get_crosstransaction_by_identifier(identifier)
+
+        with self.write_lock, self.conn:
+            self.conn.execute(
+                'INSERT OR REPLACE INTO crosstransaction_events('
+                '    identifier,initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status'
+                ') VALUES(?, ?, ?, ?, ?, ?, ?)',
+                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], status),
+            )
+
+        print("success")

@@ -166,3 +166,41 @@ def test_restore_without_snapshot():
 
     aggregate = newwal.state_manager.current_state
     assert aggregate.state_changes == [Block(5), Block(7), Block(8)]
+
+
+######demo
+def test_wal():
+    state = None
+    serializer = PickleSerializer
+
+    state_manager = StateManager(state_transition_noop, state)
+    ###storage = SQLiteStorage('/home/wk/work/Raiden/test.txt', serializer)
+    storage = SQLiteStorage('/home/wk/work/Raiden/test.txt', serializer)
+    wal = CrossTransaction(state_manager, storage)
+    return wal
+
+def test_create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address):
+    wal = test_wal()
+    wal.create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address)
+
+def get_all_crosstransaction():
+    wal = test_wal()
+    wal.get_all_crosstransaction()
+
+def get_crosstransaction_by_identifier(identifier):
+    wal = test_wal()
+    wal.get_crosstransaction_by_identifier(identifier)
+
+def change_crosstransaction_status(identifier,status):
+    wal = test_wal()
+    wal.change_crosstransaction_status(identifier,status)
+
+get_all_crosstransaction()
+
+###get_crosstransaction_by_identifier("0xe5c165a44a7a82afab71ff3cf7e3a2c58e155347")
+
+###change_crosstransaction_status("0xe5c165a44a7a82afab71ff3cf7e3a2c58e155347",6)
+
+###test_create_crosstransactiontry("0xb626843871F547f097d2185342fCbB6f7a28e160","0xb626843871F547f097d2185342fCbB6f7a28e160",200,100,"0xb626843871F547f097d2185342fCbB6f7a28e160")
+
+
