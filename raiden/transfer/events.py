@@ -387,3 +387,34 @@ class SendProcessed(SendMessageEvent):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+class SendCrosstransaction(SendMessageEvent):
+
+    def __init__(
+        self,
+        recipient,
+        queue_name,
+        message_identifier,
+    ):
+        super().__init__(recipient,queue_name,message_identifier)
+
+    def __repr__(self):
+        return (
+            '<'
+            'SendCrosstransaction msgid:{} recipient:{}'
+            '>'
+        ).format(
+            self.message_identifier,
+            pex(self.recipient),
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, SendCrosstransaction) and
+            self.message_identifier == other.message_identifier and
+            self.recipient == other.recipient
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

@@ -39,7 +39,8 @@ class SQLiteStorage:
                 '    data BINARY, '
                 '    FOREIGN KEY(source_statechange_id) REFERENCES state_changes(identifier)'
                 ')',
-                #####demo
+            )
+        #####demo
             cursor.execute(
                 'CREATE TABLE IF NOT EXISTS crosstransaction_events ('
                 '    identifier INTEGER PRIMARY KEY, '
@@ -50,7 +51,7 @@ class SQLiteStorage:
                 '    receiveBTC_address VARCHAR, '
                 '    sendBTC_address VARCHAR, '
                 '    time DATE, '
-                '    status INTEGER NOT NULL, '
+                '    status INTEGER NOT NULL'
                 ')',
             )
 
@@ -268,24 +269,10 @@ class SQLiteStorage:
         cursor = self.conn.cursor()
 
         cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE initiator_address = ?',
+            'SELECT * FROM crosstransaction_events ',
             (address,),
         )
 
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE target_address = ?',
-            (address,),
-        )
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE receiveBTC_address = ?',
-            (address,),
-        )
-
-        cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE sendBTC_address = ?',
-            (address,),
-        )
 
         result = [
             (entry[0], self.serializer.deserialize(entry[1]))

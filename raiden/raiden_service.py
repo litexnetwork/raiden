@@ -564,3 +564,9 @@ class RaidenService:
     def target_mediated_transfer(self, transfer: LockedTransfer):
         init_target_statechange = target_init(transfer)
         self.handle_state_change(init_target_statechange)
+
+
+    # send crosstransaction
+    def start_crosstransaction(self,
+                               ):
+        pass

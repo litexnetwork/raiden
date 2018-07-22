@@ -206,20 +206,19 @@ class ConnectionsInfoResource(BaseResource):
 ################sqlite_demo
 
 class CrossTransactionTry(BaseResource):
+    post_schema = TransferSchema(
+        only=('initiator_address', 'sendETH_amount', 'sendBTC_amount', 'receiveBTC_address', 'identifier'),
+    )
 
-    put_schema = ChannelPutSchema
-
-    def get(self):
-        """
-        this translates to 'get all channels the node is connected with'
-        """
-        return self.rest_api.get_crosstransaction_list(
-            self.rest_api.raiden_api.raiden.default_registry.address,
-        )
-
-    @use_kwargs(put_schema, locations=('json',))
-    def put(self, **kwargs):
-        return self.rest_api.put_crossstransactiontry(
+    @use_kwargs(post_schema, locations=('json',))
+    def post(self, token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
+        return self.rest_api.initiate_transfer(
             registry_address=self.rest_api.raiden_api.raiden.default_registry.address,
-            **kwargs,
+            token_address=token_address,
+            target_address=target_address,
+            initiator_address=initiator_address,
+            sendETH_amount=sendETH_amount,
+            sendBTC_amount=sendBTC_amount,
+            receiveBTC_address=receiveBTC_address,
+            identifier=identifier
         )

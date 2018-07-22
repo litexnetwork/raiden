@@ -757,3 +757,22 @@ class ReceiveProcessed(StateChange):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+class ReceiveCrosstransaction(StateChange):
+    def __init__(self,message_identifier:typing.MessageID):
+        self.message_identifier = message_identifier
+
+    def __repr__(self):
+        return '<ReceiveCrosstransaction msgid:{}>'.format(
+            self.message_identifier,
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ReceiveCrosstransaction) and
+            self.message_identifier == other.message_identifier
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

@@ -829,7 +829,7 @@ class TokenNetwork:
                     )
 
                 log.info('settle failed', **log_details)
-                raise TransactionThrew('Settle', receipt_or_none)
+                #raise TransactionThrew('Settle', receipt_or_none)
 
             log.info(
                 'settle successful',

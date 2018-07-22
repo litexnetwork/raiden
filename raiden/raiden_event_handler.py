@@ -15,7 +15,7 @@ from raiden.transfer.events import (
     EventTransferSentSuccess,
     SendDirectTransfer,
     SendProcessed,
-)
+    SendCrosstransaction)
 from raiden.transfer.mediated_transfer.events import (
     EventUnlockFailed,
     EventUnlockSuccess,
@@ -304,6 +304,18 @@ def handle_contract_send_channelsettle(
         pass
 
 
+def handle_send_crosstransaction(raiden: RaidenService,
+                                 send_crosstransaction_event:SendCrosstransaction):
+    crosstransaction_message = message_from_sendevent(send_crosstransaction_event,raiden.address)
+    raiden.sign(crosstransaction_message)
+    raiden.transport.send_async(
+        send_crosstransaction_event.recipient,
+        send_crosstransaction_event.queue_name,
+        crosstransaction_message
+    )
+
+
+
 def on_raiden_event(raiden: RaidenService, event: Event):
     # pylint: disable=too-many-branches
 
@@ -321,6 +333,8 @@ def on_raiden_event(raiden: RaidenService, event: Event):
         handle_send_refundtransfer(raiden, event)
     elif type(event) == SendProcessed:
         handle_send_processed(raiden, event)
+    elif type(event) == SendCrosstransaction:
+        handle_send_crosstransaction(raiden,event)
     elif type(event) == EventTransferSentSuccess:
         handle_transfersentsuccess(raiden, event)
     elif type(event) == EventTransferSentFailed:

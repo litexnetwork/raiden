@@ -9,7 +9,7 @@ from raiden.transfer.state_change import (
     ReceiveProcessed,
     ReceiveTransferDirect,
     ReceiveUnlock,
-)
+    ReceiveCrosstransaction)
 from raiden.messages import (
     DirectTransfer,
     LockedTransfer,
@@ -19,7 +19,7 @@ from raiden.messages import (
     RevealSecret,
     Secret,
     SecretRequest,
-)
+    Crosstransaction)
 from raiden.transfer.mediated_transfer.state import lockedtransfersigned_from_message
 from raiden.transfer.mediated_transfer.state_change import (
     ReceiveSecretRequest,
@@ -121,6 +121,9 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
     processed = ReceiveProcessed(message.message_identifier)
     raiden.handle_state_change(processed)
 
+def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
+    crosstransaction = ReceiveCrosstransaction(message.message_identifier)
+    raiden.handle_state_change(crosstransaction)
 
 def on_message(raiden: RaidenService, message: Message):
     """ Return True if the message is known. """
@@ -139,6 +142,8 @@ def on_message(raiden: RaidenService, message: Message):
         handle_message_lockedtransfer(raiden, message)
     elif type(message) == Processed:
         handle_message_processed(raiden, message)
+    elif type(message) == Crosstransaction:
+        handle_message_crosstransaction(raiden,message)
     else:
         log.error('Unknown message cmdid {}'.format(message.cmdid))
         return False

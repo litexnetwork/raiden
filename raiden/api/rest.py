@@ -112,7 +112,7 @@ URLS_V1 = [
     ('/connections', ConnectionsInfoResource),
 
 ###sqlite_demo
-    ('/crosstransactiontry',CrossTransactionTry),
+    ('/crosstransactiontry/<hexaddress:token_address>/<hexaddress:target_address>',CrossTransactionTry),
     ###('/crosstransactionagree',CrossTransactionAgree),
     ###('/crosstransactionsend',CrossTransactionSend),
 ]
@@ -672,6 +672,8 @@ class RestAPI:
         }
         result = self.transfer_schema.dump(transfer)
         return api_response(result=result.data)
+
+
 
     def _deposit(self, registry_address, channel_state, total_deposit):
         if channel.get_status(channel_state) != CHANNEL_STATE_OPENED:

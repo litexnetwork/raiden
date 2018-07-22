@@ -27,7 +27,7 @@ from raiden.utils import (
 from raiden.transfer.events import (
     SendDirectTransfer,
     SendProcessed,
-)
+    SendCrosstransaction)
 from raiden.transfer.mediated_transfer.events import (
     SendBalanceProof,
     SendLockedTransfer,
@@ -150,6 +150,8 @@ def message_from_sendevent(send_event, our_address):
         message = RefundTransfer.from_event(send_event)
     elif type(send_event) == SendProcessed:
         message = Processed.from_event(send_event)
+    elif type(send_event) == SendCrosstransaction:
+        message = Crosstransaction.from_event(send_event)
     else:
         raise ValueError(f'Unknown event type {send_event}')
 
@@ -449,6 +451,76 @@ class Ping(SignedMessage):
 
     def pack(self, packed):
         packed.nonce = self.nonce
+        packed.signature = self.signature
+
+
+###crossMessage
+class Crosstransaction(SignedMessage):
+    '''
+    Request want to make Crosstransaction
+    '''
+
+    cmdid = messages.CROSSTRANSACTION
+
+    def __init__(self,message_identifier: MessageID,initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
+        super().__init__()
+        self.message_identifier = message_identifier
+        self.initiator_address = initiator_address
+        self.target_address = target_address
+        self.sendETH_amount = sendETH_amount
+        self.sendBTC_amount = sendBTC_amount
+        self.receiveBTC_address = receiveBTC_address
+        self.identifier = identifier
+
+    @classmethod
+    def unpack(cls, packed):
+        crosstransaction = cls(message_identifier= packed.message_identifier,
+                               initiator_address = packed.initiator_address,
+                               target_address = packed.target_address,
+                               sendETH_amount = packed.sendETH_amount,
+                               sendBTC_amount = packed.sendBTC_amount,
+                               receiveBTC_address = packed.receiveBTC_address,
+                               identifier = packed.identifier)
+        crosstransaction.signature = packed.signature
+        return  crosstransaction
+
+    def pack(self, packed):
+        packed.message_identifier = self.message_identifier
+        packed.initiator_address = self.initiator_address
+        packed.target_address = self.target_address
+        packed.sendETH_amount = self.sendETH_amount
+        packed.sendBTC_amount = self.sendBTC_amount
+        packed.receiveBTC_address = self.receiveBTC_address
+        packed.identifier = self.identifier
+        packed.signature = self.signature
+
+    @classmethod
+    def from_event(cls, event):
+        return cls(message_identifier=event.message_identifier)
+
+class AcceptCross(SignedMessage):
+    '''
+    Accept a Crosstransaction
+    '''
+    cmdid = messages.ACCEPTCROSS
+
+    def __init__(self,initiator_address,target_address,identifier):
+        self.initiator_address = initiator_address
+        self.target_address = target_address
+        self.identifier = identifier
+
+    @classmethod
+    def unpack(cls, packed):
+        acceptcross = cls(initiator_address= packed.initiator_address,
+                          target_address=packed.target_address,
+                          identifier = packed.identifier)
+        acceptcross.signature = packed.signature
+        return  acceptcross
+
+    def pack(self, packed):
+        packed.initiator_address = self.initiator_address
+        packed.target_address = self.target_address
+        packed.identifier = self.identifier
         packed.signature = self.signature
 
 
