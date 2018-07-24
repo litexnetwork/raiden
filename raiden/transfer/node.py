@@ -15,6 +15,7 @@ from raiden.transfer.architecture import (
 from raiden.transfer.events import (
     EventTransferSentSuccess,
     SendDirectTransfer,
+    SendCrosstransaction,
 )
 from raiden.transfer.state import (
     ChainState,
@@ -42,6 +43,7 @@ from raiden.transfer.state_change import (
     ReceiveProcessed,
     ReceiveTransferDirect,
     ReceiveUnlock,
+    ActionCrosstransaction,
 )
 from raiden.transfer.mediated_transfer.state_change import (
     ActionInitInitiator,
@@ -658,6 +660,30 @@ def handle_receive_unlock(chain_state, state_change):
     secrethash = state_change.secrethash
     return subdispatch_to_paymenttask(chain_state, state_change, secrethash)
 
+def handle_send_cross(chain_state,state_change):
+    events = list()
+    '''
+    for queue in chain_state.queueids_to_queues.values():
+        remove = []
+
+        # TODO: ensure Processed message came from the correct peer
+        for pos, message in enumerate(queue):
+            if message.message_identifier == state_change.message_identifier:
+                if type(message) == SendCrosstransaction:
+                    events.append(SendCrosstransaction(
+                        message.payment_identifier,
+                        message.balance_proof.transferred_amount,
+                        message.recipient,
+                    ))
+                remove.append(pos)
+
+        for removepos in reversed(remove):
+            queue.pop(removepos)
+    '''
+    events.append(SendCrosstransaction())
+    return TransitionResult(chain_state, events)
+
+
 
 def state_transition(chain_state, state_change):
     # pylint: disable=too-many-branches,unidiomatic-typecheck
@@ -796,6 +822,8 @@ def state_transition(chain_state, state_change):
             chain_state,
             state_change,
         )
+    elif type(state_change) == ActionCrosstransaction:
+        iteration = handle_send_cross(chain_state,state_change)
 
     sanity_check(iteration)
 

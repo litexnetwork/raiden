@@ -396,8 +396,13 @@ class SendCrosstransaction(SendMessageEvent):
         recipient,
         queue_name,
         message_identifier,
+        initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address
     ):
-        super().__init__(recipient,queue_name,message_identifier)
+        super().__init__(recipient,queue_name,message_identifier,)
+        self.initiator_address = initiator_address
+        self.sendETH_amount = sendETH_amount
+        self.sendBTC_amount = sendBTC_amount
+        self.receiveBTC_address = receiveBTC_address
 
     def __repr__(self):
         return (
@@ -413,7 +418,10 @@ class SendCrosstransaction(SendMessageEvent):
         return (
             isinstance(other, SendCrosstransaction) and
             self.message_identifier == other.message_identifier and
-            self.recipient == other.recipient
+            self.recipient == other.recipient and self.initiator_address == other.initiator_address and
+            self.receiveBTC_address == self.receiveBTC_address and
+            self.sendETH_amount == other.sendETH_amount and
+            self.sendBTC_amount == other.sendBTC_amount
         )
 
     def __ne__(self, other):

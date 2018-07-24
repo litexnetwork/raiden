@@ -27,6 +27,11 @@ from raiden.transfer.mediated_transfer.state import (
     lockedtransfersigned_from_message,
     TransferDescriptionWithSecretState,
 )
+
+from raiden.constants import (
+    UINT256_MAX,
+    UINT64_MAX,
+)
 from raiden.transfer.state_change import (
     ActionChangeNodeNetworkState,
     ActionInitChain,
@@ -34,6 +39,7 @@ from raiden.transfer.state_change import (
     ActionTransferDirect,
     Block,
     ContractReceiveNewPaymentNetwork,
+    ActionCrosstransaction,
 )
 from raiden.transfer.mediated_transfer.state_change import (
     ActionInitInitiator,
@@ -41,7 +47,7 @@ from raiden.transfer.mediated_transfer.state_change import (
     ActionInitTarget,
 )
 from raiden.exceptions import InvalidAddress, RaidenShuttingDown
-from raiden.messages import (LockedTransfer, SignedMessage)
+from raiden.messages import (LockedTransfer, SignedMessage,Crosstransaction)
 from raiden.connection_manager import ConnectionManager
 from raiden.utils import (
     pex,
@@ -567,6 +573,21 @@ class RaidenService:
 
 
     # send crosstransaction
-    def start_crosstransaction(self,
-                               ):
+    def start_crosstransaction(self,token_network_identifier,
+            target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
+            identifier):
+        self.transport.start_health_check(target_address)
+        if identifier is None:
+            identifier = create_default_identifier()
+
+        assert identifier not in self.identifier_to_results
+        async_result = AsyncResult()
+        self.identifier_to_results[identifier].append(async_result)
+
+        secret = random_secret()
+        crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+        crosstransaction_statechange = ActionCrosstransaction(crosstransaction_message.message_identifier)
         pass
+        self.handle_state_change(crosstransaction_statechange)
+
+        return  async_result

@@ -203,6 +203,8 @@ class ConnectionsInfoResource(BaseResource):
         )
 
 
+
+
 ################sqlite_demo
 
 class CrossTransactionTry(BaseResource):
@@ -212,7 +214,7 @@ class CrossTransactionTry(BaseResource):
 
     @use_kwargs(post_schema, locations=('json',))
     def post(self, token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
-        return self.rest_api.initiate_transfer(
+        return self.rest_api.start_cross(
             registry_address=self.rest_api.raiden_api.raiden.default_registry.address,
             token_address=token_address,
             target_address=target_address,

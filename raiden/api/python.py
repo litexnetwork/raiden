@@ -711,14 +711,21 @@ class RaidenAPI:
         returned_events.sort(key=lambda evt: evt.get('block_number'), reverse=True)
         return returned_events
 
-    def crosstransaction_async(self,
-                         registry_address,
-                         token_address,
-                         target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
-                         identifier):
 
+    def crosstransaction_async(self,registry_address,token_address,target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,identifier):
 
-        pass
+        payment_network_identifier = self.raiden.default_registry.address
+        token_network_identifier = views.get_token_network_identifier_by_token_address(
+            views.state_from_raiden(self.raiden),
+            payment_network_identifier,
+            token_address,)
+        async_result = self.raiden.start_crosstransaction(
+            token_network_identifier,
+            target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
+            identifier,
+        )
+        return async_result
+
 
     transfer = transfer_and_wait
 
