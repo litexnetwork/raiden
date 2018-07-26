@@ -577,17 +577,14 @@ class RaidenService:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
         self.transport.start_health_check(target_address)
-        if identifier is None:
-            identifier = create_default_identifier()
-
-        assert identifier not in self.identifier_to_results
-        async_result = AsyncResult()
-        self.identifier_to_results[identifier].append(async_result)
-
-        secret = random_secret()
+        #self.wal.create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address)
         crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
-        crosstransaction_statechange = ActionCrosstransaction(crosstransaction_message.message_identifier)
-        pass
-        self.handle_state_change(crosstransaction_statechange)
+        async_result = self.transport.send_async(
+            target_address,
+            bytes("123",'utf-8'),
+            crosstransaction_message,
+        )
+
+        print('ok')
 
         return  async_result

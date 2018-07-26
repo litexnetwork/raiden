@@ -122,8 +122,9 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
     raiden.handle_state_change(processed)
 
 def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
-    crosstransaction = ReceiveCrosstransaction(message.message_identifier)
-    raiden.handle_state_change(crosstransaction)
+    log.info("recive message")
+    #crosstransaction = ReceiveCrosstransaction(message.message_identifier)
+    #raiden.handle_state_change(crosstransaction)
 
 def on_message(raiden: RaidenService, message: Message):
     """ Return True if the message is known. """
