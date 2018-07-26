@@ -498,6 +498,16 @@ class Crosstransaction(SignedMessage):
     def from_event(cls, event):
         return cls(message_identifier=event.message_identifier)
 
+
+
+    @classmethod
+    def to_dict(self):
+        pass
+
+    def from_dict(cls, data):
+        pass
+
+
 class AcceptCross(SignedMessage):
     '''
     Accept a Crosstransaction
