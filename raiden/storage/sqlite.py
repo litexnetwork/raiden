@@ -287,7 +287,7 @@ class SQLiteStorage:
 
         res = cursor.fetchall()[0]
 
-        print(res)
+
         return res
 
 
