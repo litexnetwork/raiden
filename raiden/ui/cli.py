@@ -782,7 +782,7 @@ def run(ctx, **kwargs):
         ctx.obj = kwargs
         return
 
-    click.secho('Welcome to Raiden, version {}!'.format(get_system_spec()['raiden']), fg='green')
+    click.secho('Welcome to Raiden-Litex, version {}!'.format(get_system_spec()['raiden']), fg='green')
     click.secho(
         '''
 ----------------------------------------------------------------------
