@@ -252,9 +252,9 @@ class SQLiteStorage:
 
 ###################demo
 
-    def create_crosstransaction(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status ):
+    def create_crosstransaction(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier ):
         #identifier = encode_hex(privatekey_to_address(sha3(int(initiator_address,16) + int(target_address,16) + int(receiveBTC_address,16) + int(time.time()))))
-        identifier =1
+
         ###initiator_address = self.rest_api.raiden_api.raiden.default_registry.address
         ####ConnectionsInfoResource
         with self.write_lock, self.conn:
@@ -264,6 +264,7 @@ class SQLiteStorage:
             )
 
         print(identifier)
+        return  identifier
 
 
     def get_all_crosstransaction(self):

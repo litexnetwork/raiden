@@ -494,7 +494,7 @@ class MatrixTransport:
             'MESSAGE RECEIVED',
             node=pex(self._raiden_service.address),
             message=message,
-            message_sender=pex(message.sender),
+            #message_sender=pex(message.sender),
         )
 
         try:
