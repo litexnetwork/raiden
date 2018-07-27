@@ -127,8 +127,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
-    #crosstransaction = ReceiveCrosstransaction(message.message_identifier)
-    #raiden.handle_state_change(crosstransaction)
+
 
 def on_message(raiden: RaidenService, message: Message):
     """ Return True if the message is known. """
