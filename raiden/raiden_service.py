@@ -593,7 +593,12 @@ class RaidenService:
         return  async_result
 
     # vincent
-    def start_send_crosstansfer(self, token_address, amount, target, identifier=None, cross_id):
+    def start_send_crosstansfer(self, cross_id, identifier=None):
+        cross_data = self.wal.get_crosstransaction_by_identifier(cross_id)
+        token_address = "0x68fB3bc1572b917096C9FcaF0A0A46a7b79544f6"
+        amount = cross_data[3]
+        target = cross_data[2]
+
         payment_network_identifier = self.default_registry.address
         token_network_identifier = views.get_token_network_identifier_by_token_address(
             views.state_from_raiden(self),
@@ -626,8 +631,9 @@ class RaidenService:
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
 
-            if type(event) == SendLockedTransfer:
-                #todo
+            # if type(event) == SendLockedTransfer:
+            #     #todo
+            #     pass
 
             on_raiden_event(self, event)
 
