@@ -219,10 +219,10 @@ class MatrixTransport:
         if not self._running:
             return
         self.log.info(
-            'SEND ASYNC'
-            #receiver_address=to_normalized_address(receiver_address),
-            #message=message,
-         #queue_name=queue_name,
+            'SEND ASYNC',
+          #  receiver_address=to_normalized_address(receiver_address),
+         #   message=message,
+        # queue_name=queue_name,
         )
         if not is_binary_address(receiver_address):
             raise ValueError('Invalid address {}'.format(pex(receiver_address)))

@@ -273,6 +273,7 @@ CMDID_MESSAGE = {
     LOCKEDTRANSFER: LockedTransfer,
     REFUNDTRANSFER: RefundTransfer,
     DELIVERED: Delivered,
+    CROSSTRANSACTION:Crosstransaction,
 }
 
 

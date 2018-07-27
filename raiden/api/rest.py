@@ -874,7 +874,5 @@ class RestAPI:
     def start_cross(self,registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
         if identifier is None:
             identifier = create_default_identifier()
-        try:
-            cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
-        except Exception as e:
-            print(e)
+
+        cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)

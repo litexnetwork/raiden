@@ -579,6 +579,7 @@ class RaidenService:
         self.transport.start_health_check(target_address)
         #self.wal.create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address)
         crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+        print(crosstransaction_message.to_dict())
         async_result = self.transport.send_async(
             target_address,
             bytes("123",'utf-8'),

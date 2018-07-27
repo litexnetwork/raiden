@@ -462,7 +462,7 @@ class Crosstransaction(SignedMessage):
 
     cmdid = messages.CROSSTRANSACTION
 
-    def __init__(self,message_identifier: MessageID,initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
+    def __init__(self, message_identifier: MessageID,initiator_address,target_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
         super().__init__()
         self.message_identifier = message_identifier
         self.initiator_address = initiator_address
@@ -500,29 +500,30 @@ class Crosstransaction(SignedMessage):
 
 
 
-    @classmethod
+
     def to_dict(self):
 
         return {
-            'type':self.__class__.__name__,
+            'type': self.__class__.__name__ ,
             'message_identifier':self.message_identifier,
-            'initiator_address':self.initiator_address,
-            'target_address':self.target_address,
+            'initiator_address':to_normalized_address(self.initiator_address),
+            'target_address':to_normalized_address(self.target_address),
             'sendETH_amount':self.sendETH_amount,
             'sendBTC_amount':self.sendBTC_amount,
-            'receiveBTC_address':self.receiveBTC_address,
+            'receiveBTC_address':to_normalized_address(self.receiveBTC_address),
             'identifier':self.identifier,
-            'signature' :self.signature
+            'signature' :encode_hex(self.signature),
         }
 
+    @classmethod
     def from_dict(cls, data):
         message = cls(
             message_identifier = data['message_identifier'],
-            initiator_address = data['initiator_address'],
-            target_address = data['target_address'],
+            initiator_address = to_canonical_address(data['initiator_address']),
+            target_address = to_canonical_address(data['target_address']),
             sendETH_amount = data['sendETH_amount'],
             sendBTC_amount = data['sendBTC_amount'],
-            receiveBTC_address = data['receiveBTC_address'],
+            receiveBTC_address = to_canonical_address(data['receiveBTC_address']),
             identifier = data['identifier']
         )
         message.signature = decode_hex(data['signature'])
@@ -1547,6 +1548,7 @@ CMDID_TO_CLASS = {
     messages.REVEALSECRET: RevealSecret,
     messages.SECRET: Secret,
     messages.SECRETREQUEST: SecretRequest,
+    messages.CROSSTRANSACTION:Crosstransaction,
 }
 
 CLASSNAME_TO_CLASS = {klass.__name__: klass for klass in CMDID_TO_CLASS.values()}
