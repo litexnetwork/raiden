@@ -592,3 +592,44 @@ class RaidenService:
         print('ok')
 
         return  async_result
+
+    # vincent
+    def start_send_crosstansfer(self, token_address, amount, target, identifier=None, cross_id):
+        payment_network_identifier = self.default_registry.address
+        token_network_identifier = views.get_token_network_identifier_by_token_address(
+            views.state_from_raiden(self),
+            payment_network_identifier,
+            token_address,
+        )
+
+        self.transport.start_health_check(target)
+        if identifier is None:
+            identifier = create_default_identifier()
+
+        secret = random_secret()
+        init_initiator_statechange = initiator_init(
+            self,
+            identifier,
+            amount,
+            secret,
+            token_network_identifier,
+            target,
+        )
+
+        self.handle_cross_state_change(init_initiator_statechange)
+
+    def handle_cross_state_change(self, state_change, block_number=None):
+        if block_number is None:
+            block_number = self.get_block_number()
+
+        event_list = self.wal.log_and_dispatch(state_change, block_number)
+
+        for event in event_list:
+            log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
+
+            if type(event) == SendLockedTransfer:
+                #todo
+
+            on_raiden_event(self, event)
+
+
