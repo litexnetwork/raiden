@@ -502,10 +502,31 @@ class Crosstransaction(SignedMessage):
 
     @classmethod
     def to_dict(self):
-        pass
+
+        return {
+            'type':self.__class__.__name__,
+            'message_identifier':self.message_identifier,
+            'initiator_address':self.initiator_address,
+            'target_address':self.target_address,
+            'sendETH_amount':self.sendETH_amount,
+            'sendBTC_amount':self.sendBTC_amount,
+            'receiveBTC_address':self.receiveBTC_address,
+            'identifier':self.identifier,
+            'signature' :self.signature
+        }
 
     def from_dict(cls, data):
-        pass
+        message = cls(
+            message_identifier = data['message_identifier'],
+            initiator_address = data['initiator_address'],
+            target_address = data['target_address'],
+            sendETH_amount = data['sendETH_amount'],
+            sendBTC_amount = data['sendBTC_amount'],
+            receiveBTC_address = data['receiveBTC_address'],
+            identifier = data['identifier']
+        )
+        message.signature = decode_hex(data['signature'])
+        return  message
 
 
 class AcceptCross(SignedMessage):

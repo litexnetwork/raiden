@@ -72,6 +72,29 @@ fee = make_field('fee', 32, '32s', integer(0, UINT256_MAX))
 optional_secret = make_field('secret', 32, '32s', optional_bytes())
 
 signature = make_field('signature', 65, '65s')
+#demo
+initiator_address = make_field('initiator_address',20,'20s')
+target_address = make_field('target_address',20,'20s')
+sendETH_amount = make_field('sendETH_amount',32,'32s', integer(0, UINT256_MAX))
+sendBTC_amount = make_field('sendBTC_amount',32,'32s', integer(0, UINT256_MAX))
+receiveBTC_address = make_field('receiveBTC_address',20,'20s')
+identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
+
+Crosstransaction = namedbuffer(
+    'crosstransation',[
+        cmdid((CROSSTRANSACTION)),
+        pad(3),
+        message_identifier,
+        initiator_address,
+        target_address,
+        sendETH_amount,
+        sendBTC_amount,
+        receiveBTC_address,
+        identifier,
+        signature
+    ]
+)
+
 
 Processed = namedbuffer(
     'processed',
@@ -92,6 +115,7 @@ Delivered = namedbuffer(
         signature,
     ],
 )
+
 
 Ping = namedbuffer(
     'ping',
