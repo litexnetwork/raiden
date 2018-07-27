@@ -41,7 +41,7 @@ from raiden.messages import (
     SignedMessage,
     Message,
     Processed,
-)
+    Crosstransaction)
 from raiden.network.transport.udp import udp_utils
 from raiden.network.utils import get_http_rtt
 from raiden.raiden_service import RaidenService
@@ -238,6 +238,10 @@ class MatrixTransport:
         if isinstance(message, Processed):
             async_result.set(True)  # processed messages shouldn't get a Delivered reply
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
+        elif isinstance(message,Crosstransaction):
+            async_result.set(True)  # processed messages shouldn't get a Delivered reply
+            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
+
         else:
             self._messageids_to_asyncresult[message_id] = async_result
             self._send_with_retry(receiver_address, async_result, json.dumps(message.to_dict()))
