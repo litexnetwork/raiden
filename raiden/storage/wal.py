@@ -64,7 +64,7 @@ class WriteAheadLog:
         if state_change_id:
             self.storage.write_state_snapshot(state_change_id, current_state)
 
-    def create_crosstransactiontry(self,initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address,identifier):
+    def create_crosstransactiontry(self,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address,identifier):
         """ Log and apply a state change.
 
         This function will first write the state change to the write-ahead-log,
@@ -78,7 +78,7 @@ class WriteAheadLog:
         ###identifier = sha3(initiator_address + target_address + receiveBTC_address)
         ###initiator_address = raiden.api.v1.resources.AddressResource.get(self)
 
-        res = self.storage.create_crosstransaction(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, 1,identifier)
+        res = self.storage.create_crosstransaction(initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, 1,identifier)
 
         return res
 

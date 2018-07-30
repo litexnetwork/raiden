@@ -572,7 +572,7 @@ class RaidenService:
         self.handle_state_change(init_target_statechange)
 
 
-    # send crosstransaction
+    # demo send crosstransaction
     def start_crosstransaction(self,token_network_identifier,
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
@@ -592,7 +592,7 @@ class RaidenService:
 
         return  async_result
 
-    # vincent
+    # demo vincent
     def start_send_crosstansfer(self, cross_id, identifier=None):
         cross_data = self.wal.get_crosstransaction_by_identifier(cross_id)
         token_address = "0x68fB3bc1572b917096C9FcaF0A0A46a7b79544f6"
