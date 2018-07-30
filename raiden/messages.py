@@ -542,6 +542,7 @@ class AcceptCross(SignedMessage):
     cmdid = messages.ACCEPTCROSS
 
     def __init__(self, message_identifier: MessageID,initiator_address,target_address,identifier,accept):
+        super().__init__()
         self.message_identifier = message_identifier
         self.initiator_address = initiator_address
         self.target_address = target_address
