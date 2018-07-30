@@ -81,6 +81,7 @@ receiveBTC_address = make_field('receiveBTC_address',20,'20s')
 identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',10,'10s')
 
+
 AcceptCross = namedbuffer(
     'acceptcross',[
         cmdid(ACCEPTCROSS),
@@ -98,6 +99,7 @@ Crosstransaction = namedbuffer(
         message_identifier,
         initiator_address,
         target_address,
+        token_network_address,
         sendETH_amount,
         sendBTC_amount,
         receiveBTC_address,

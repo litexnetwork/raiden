@@ -321,7 +321,9 @@ def create_default_identifier():
     """ Generates a random identifier. """
     return random.randint(0, constants.UINT64_MAX)
 
-
+def create_default_crossid():
+    """ Generates a random identifier. """
+    return random.randint(0, 100000)
 def merge_dict(a: dict, b: dict, path=None) -> dict:
     """ merges b into a """
     if path is None:

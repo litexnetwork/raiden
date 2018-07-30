@@ -240,6 +240,7 @@ class MatrixTransport:
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
         elif isinstance(message,Crosstransaction):
             async_result.set(True)  # processed messages shouldn't get a Delivered reply
+            print(message.to_dict())
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
 
         else:

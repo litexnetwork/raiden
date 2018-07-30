@@ -55,7 +55,7 @@ from raiden.utils import (
     random_secret,
     create_default_identifier,
     typing,
-)
+    create_default_crossid)
 from raiden.storage import wal, serialize, sqlite
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
@@ -573,15 +573,15 @@ class RaidenService:
 
 
     # demo send crosstransaction
-    def start_crosstransaction(self,token_network_identifier,
+    def start_crosstransaction(self,token_network_address,
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
         self.transport.start_health_check(target_address)
-        cross_id = create_default_identifier()
-        self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
+        cross_id = create_default_crossid()
+        self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_address, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
         print("get data from sqlite")
         print(self.wal.get_crosstransaction_by_identifier(cross_id))
-        crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_identifier, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
+        crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_address, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
         async_result = self.transport.send_async(
             target_address,
             bytes("123",'utf-8'),
@@ -592,7 +592,7 @@ class RaidenService:
 
         return  async_result
 
-    # demo 
+    # demo
     def start_send_crosstansfer(self, cross_id, identifier=None):
         cross_data = self.wal.get_crosstransaction_by_identifier(cross_id)
         token_address = "0x68fB3bc1572b917096C9FcaF0A0A46a7b79544f6"
