@@ -577,7 +577,7 @@ class RaidenService:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
         self.transport.start_health_check(target_address)
-        identifier = create_default_identifier()
+        #identifier = create_default_identifier()
         self.wal.create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address,identifier)
         print("get data from sqlite")
         print(self.wal.get_crosstransaction_by_identifier(identifier))

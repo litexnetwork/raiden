@@ -79,7 +79,18 @@ sendETH_amount = make_field('sendETH_amount',32,'32s', integer(0, UINT256_MAX))
 sendBTC_amount = make_field('sendBTC_amount',32,'32s', integer(0, UINT256_MAX))
 receiveBTC_address = make_field('receiveBTC_address',20,'20s')
 identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
+accept = make_field('accept',10,'10s')
 
+AcceptCross = namedbuffer(
+    'acceptcross',[
+        cmdid(ACCEPTCROSS),
+        pad(3),
+        message_identifier,
+        initiator_address,
+        target_address,
+        identifier
+    ]
+)
 Crosstransaction = namedbuffer(
     'crosstransation',[
         cmdid((CROSSTRANSACTION)),
@@ -274,6 +285,7 @@ CMDID_MESSAGE = {
     REFUNDTRANSFER: RefundTransfer,
     DELIVERED: Delivered,
     CROSSTRANSACTION:Crosstransaction,
+    ACCEPTCROSS:AcceptCross,
 }
 
 
