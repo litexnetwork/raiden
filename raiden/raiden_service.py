@@ -47,7 +47,7 @@ from raiden.transfer.mediated_transfer.state_change import (
     ActionInitTarget,
 )
 from raiden.exceptions import InvalidAddress, RaidenShuttingDown
-from raiden.messages import (LockedTransfer, SignedMessage,Crosstransaction)
+from raiden.messages import (LockedTransfer, SignedMessage,Crosstransaction, CrossLockedTransfer)
 from raiden.connection_manager import ConnectionManager
 from raiden.utils import (
     pex,
@@ -57,6 +57,9 @@ from raiden.utils import (
     typing,
     create_default_crossid)
 from raiden.storage import wal, serialize, sqlite
+
+#demo
+from raiden.messages import message_from_sendevent
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -595,16 +598,16 @@ class RaidenService:
     # demo
     def start_send_crosstansfer(self, cross_id, identifier=None):
         cross_data = self.wal.get_crosstransaction_by_identifier(cross_id)
-        token_address = "0x68fB3bc1572b917096C9FcaF0A0A46a7b79544f6"
-        amount = cross_data[3]
+        amount = cross_data[4]
         target = cross_data[2]
 
         payment_network_identifier = self.default_registry.address
-        token_network_identifier = views.get_token_network_identifier_by_token_address(
-            views.state_from_raiden(self),
-            payment_network_identifier,
-            token_address,
-        )
+        # token_network_identifier = views.get_token_network_identifier_by_token_address(
+        #     views.state_from_raiden(self),
+        #     payment_network_identifier,
+        #     token_address,
+        # )
+        token_network_identifier = cross_data[3]
 
         self.transport.start_health_check(target)
         if identifier is None:
@@ -620,9 +623,9 @@ class RaidenService:
             target,
         )
 
-        self.handle_cross_state_change(init_initiator_statechange)
+        self.handle_cross_state_change(init_initiator_statechange, cross_id)
 
-    def handle_cross_state_change(self, state_change, block_number=None):
+    def handle_cross_state_change(self, state_change, cross_id, block_number=None):
         if block_number is None:
             block_number = self.get_block_number()
 
@@ -631,9 +634,17 @@ class RaidenService:
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
 
-            # if type(event) == SendLockedTransfer:
-            #     #todo
-            #     pass
+            if type(event) == SendLockedTransfer:
+                locked_transfer_message = message_from_sendevent(event, self.address)
+                cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
+
+                self.sign(cross_transfer_message)
+                self.transport.send_async(
+                    cross_transfer_message.recipient,
+                    bytes("456",'utf-8'),
+                    cross_transfer_message
+                )
+                continue
 
             on_raiden_event(self, event)
 
