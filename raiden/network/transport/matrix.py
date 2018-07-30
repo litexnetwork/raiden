@@ -502,7 +502,7 @@ class MatrixTransport:
         )
 
         try:
-            if on_message(self._raiden_service, message) and not isinstance(message, Processed):
+            if on_message(self._raiden_service, message) and not isinstance(message, Processed) :
                 # TODO: Maybe replace with Matrix read receipts.
                 #       Unfortunately those work on an 'up to' basis, not on individual messages
                 #       which means that message order is important which isn't guaranteed between

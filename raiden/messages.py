@@ -541,24 +541,63 @@ class AcceptCross(SignedMessage):
     '''
     cmdid = messages.ACCEPTCROSS
 
-    def __init__(self,initiator_address,target_address,identifier):
+    def __init__(self, message_identifier: MessageID,initiator_address,target_address,identifier,accept):
+        self.message_identifier = message_identifier
         self.initiator_address = initiator_address
         self.target_address = target_address
         self.identifier = identifier
+        self.accept =accept
 
     @classmethod
     def unpack(cls, packed):
-        acceptcross = cls(initiator_address= packed.initiator_address,
+        acceptcross = cls(message_identifier=packed.message_identifier,
+                          initiator_address= packed.initiator_address,
                           target_address=packed.target_address,
-                          identifier = packed.identifier)
+                          identifier = packed.identifier,
+                          accept= packed.accept)
         acceptcross.signature = packed.signature
         return  acceptcross
 
     def pack(self, packed):
+        packed.message_identifier = self.message_identifier
         packed.initiator_address = self.initiator_address
         packed.target_address = self.target_address
         packed.identifier = self.identifier
         packed.signature = self.signature
+        packed.accept = self.accept
+
+
+    @classmethod
+    def from_event(cls, event):
+        return cls(message_identifier=event.message_identifier)
+
+
+
+
+    def to_dict(self):
+
+        return {
+            'type': self.__class__.__name__ ,
+            'message_identifier':self.message_identifier,
+            'initiator_address':to_normalized_address(self.initiator_address),
+            'target_address':to_normalized_address(self.target_address),
+            'identifier':self.identifier,
+            'accept':self.accept,
+            'signature' :encode_hex(self.signature),
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        message = cls(
+            message_identifier = data['message_identifier'],
+            initiator_address = to_canonical_address(data['initiator_address']),
+            target_address = to_canonical_address(data['target_address']),
+            identifier = data['identifier'],
+            accept = data['accept']
+        )
+        message.signature = decode_hex(data['signature'])
+        return  message
+
 
 
 class SecretRequest(SignedMessage):
@@ -1554,6 +1593,7 @@ CMDID_TO_CLASS = {
     messages.SECRET: Secret,
     messages.SECRETREQUEST: SecretRequest,
     messages.CROSSTRANSACTION:Crosstransaction,
+    messages.ACCEPTCROSS:AcceptCross,
 }
 
 CLASSNAME_TO_CLASS = {klass.__name__: klass for klass in CMDID_TO_CLASS.values()}
