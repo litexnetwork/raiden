@@ -1,4 +1,5 @@
 import structlog
+import random
 
 from raiden.raiden_service import RaidenService
 from raiden.utils import random_secret
@@ -27,6 +28,10 @@ from raiden.transfer.mediated_transfer.state_change import (
     ReceiveSecretReveal,
     ReceiveTransferRefund,
     ReceiveTransferRefundCancelRoute,
+)
+from raiden.constants import (
+    UINT256_MAX,
+    UINT64_MAX,
 )
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
@@ -138,6 +143,9 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
+
+
+
 
     print("recive acceptcross")
     print("message's accept is %s",(message.accept))
