@@ -36,6 +36,7 @@ REVEALSECRET = 11
 DELIVERED = 12
 CROSSTRANSACTION = 13
 ACCEPTCROSS = 14
+CROSSLOCKEDTRANSFER = 15
 
 
 # pylint: disable=invalid-name
@@ -79,7 +80,34 @@ sendETH_amount = make_field('sendETH_amount',32,'32s', integer(0, UINT256_MAX))
 sendBTC_amount = make_field('sendBTC_amount',32,'32s', integer(0, UINT256_MAX))
 receiveBTC_address = make_field('receiveBTC_address',20,'20s')
 identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
+cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',10,'10s')
+
+CrossLockedTransfer = namedbuffer(
+    'crosslockedtransfer',[
+        cmdid(CROSSLOCKEDTRANSFER),
+        pad(3),
+        nonce,
+        chain_id,
+        message_identifier,
+        payment_identifier,
+        expiration,
+        token_network_address,
+        token,
+        channel,
+        recipient,
+        target,
+        initiator,
+        locksroot,
+        secrethash,
+        transferred_amount,
+        locked_amount,
+        amount,
+        fee,
+        cross_id,
+        signature,
+    ]
+)
 
 AcceptCross = namedbuffer(
     'acceptcross',[
@@ -286,6 +314,7 @@ CMDID_MESSAGE = {
     DELIVERED: Delivered,
     CROSSTRANSACTION:Crosstransaction,
     ACCEPTCROSS:AcceptCross,
+    CROSSLOCKEDTRANSFER:CrossLockedTransfer,
 }
 
 

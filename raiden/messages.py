@@ -467,7 +467,7 @@ class Crosstransaction(SignedMessage):
         self.message_identifier = message_identifier
         self.initiator_address = initiator_address
         self.target_address = target_address
-        self.token_network_identifier = token_network_identifier,
+        self.token_network_identifier = token_network_identifier
         self.sendETH_amount = sendETH_amount
         self.sendBTC_amount = sendBTC_amount
         self.receiveBTC_address = receiveBTC_address
@@ -1473,6 +1473,134 @@ class LockedTransfer(LockedTransferBase):
         message.signature = decode_hex(data['signature'])
         return message
 
+#demo
+class CrossLockedTransfer(LockedTransfer):
+
+    cmdid = messages.CROSSLOCKEDTRANSFER
+
+    def __init__(self, locked_transfer, cross_id):
+        super().__init__(
+            locked_transfer.chain_id,
+            locked_transfer.message_identifier,
+            locked_transfer.payment_identifier,
+            locked_transfer.nonce
+            locked_transfer.token_network_address,
+            locked_transfer.token, 
+            locked_transfer.channel_identifier,
+            locked_transfer.transferred_amount,
+            locked_transfer.locked_amount,
+            locked_transfer.recipient,
+            locked_transfer.locksroot,
+            locked_transfer.lock,
+            locked_transfer.target,
+            locked_transfer.initiator,
+            locked_transfer.fee,
+        )
+
+        self.cross_id = cross_id
+
+    @classmethod
+    def unpack(cls, packed):
+        lock = Lock(
+            amount=packed.amount,
+            expiration=packed.expiration,
+            secrethash=packed.secrethash,
+        )
+
+        locked_transfer = LockedTransfer(
+            chain_id=packed.chain_id,
+            message_identifier=packed.message_identifier,
+            payment_identifier=packed.payment_identifier,
+            nonce=packed.nonce,
+            token_network_address=packed.token_network_address,
+            token=packed.token,
+            channel_identifier=packed.channel,
+            transferred_amount=packed.transferred_amount,
+            locked_amount=packed.locked_amount,
+            recipient=packed.recipient,
+            locksroot=packed.locksroot,
+            lock=lock,
+            target=packed.target,
+            initiator=packed.initiator,
+            fee=packed.fee,
+        )
+
+        cross_locked_transfer = cls(locked_transfer=locked_transfer, cross_id=packed.cross_id)
+
+        cross_locked_transfer.signature = packed.signature
+        return cross_locked_transfer
+
+    def pack(self, packed):
+        packed.chain_id = self.chain_id
+        packed.message_identifier = self.message_identifier
+        packed.payment_identifier = self.payment_identifier
+        packed.nonce = self.nonce
+        packed.token_network_address = self.token_network_address
+        packed.token = self.token
+        packed.channel = self.channel
+        packed.transferred_amount = self.transferred_amount
+        packed.locked_amount = self.locked_amount
+        packed.recipient = self.recipient
+        packed.locksroot = self.locksroot
+        packed.target = self.target
+        packed.initiator = self.initiator
+        packed.fee = self.fee
+        packed.cross_id = self.cross_id
+
+        lock = self.lock
+        packed.amount = lock.amount
+        packed.expiration = lock.expiration
+        packed.secrethash = lock.secrethash
+
+        packed.signature = self.signature
+
+
+    def to_dict(self):
+        return {
+            'type': self.__class__.__name__,
+            'chain_id': self.chain_id,
+            'message_identifier': self.message_identifier,
+            'payment_identifier': self.payment_identifier,
+            'nonce': self.nonce,
+            'token_network_address': to_normalized_address(self.token_network_address),
+            'token': to_normalized_address(self.token),
+            'channel': encode_hex(self.channel),
+            'transferred_amount': self.transferred_amount,
+            'locked_amount': self.locked_amount,
+            'recipient': to_normalized_address(self.recipient),
+            'locksroot': encode_hex(self.locksroot),
+            'lock': self.lock.to_dict(),
+            'target': to_normalized_address(self.target),
+            'initiator': to_normalized_address(self.initiator),
+            'fee': self.fee,
+            'cross_id': self.cross_id
+            'signature': encode_hex(self.signature),
+        }
+
+
+    @classmethod
+    def from_dict(cls, data):
+        locked_message = LockedTransfer(
+            chain_id=data['chain_id'],
+            message_identifier=data['message_identifier'],
+            payment_identifier=data['payment_identifier'],
+            nonce=data['nonce'],
+            token_network_address=to_canonical_address(data['token_network_address']),
+            token=to_canonical_address(data['token']),
+            channel_identifier=decode_hex(data['channel']),
+            transferred_amount=data['transferred_amount'],
+            locked_amount=data['locked_amount'],
+            recipient=to_canonical_address(data['recipient']),
+            locksroot=decode_hex(data['locksroot']),
+            lock=Lock.from_dict(data['lock']),
+            target=to_canonical_address(data['target']),
+            initiator=to_canonical_address(data['initiator']),
+            fee=data['fee'],
+        )
+        cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'])
+        
+        cross_message.signature = decode_hex(data['signature'])
+        return cross_message
 
 class RefundTransfer(LockedTransfer):
     """ A special LockedTransfer sent from a payee to a payer indicating that
@@ -1594,6 +1722,7 @@ CMDID_TO_CLASS = {
     messages.SECRETREQUEST: SecretRequest,
     messages.CROSSTRANSACTION:Crosstransaction,
     messages.ACCEPTCROSS:AcceptCross,
+    messages.CROSSLOCKEDTRANSFER: CrossLockedTransfer,
 }
 
 CLASSNAME_TO_CLASS = {klass.__name__: klass for klass in CMDID_TO_CLASS.values()}
