@@ -46,6 +46,7 @@ class SQLiteStorage:
                 '    identifier VARCHAR PRIMARY KEY, '
                 '    initiator_address VARCHAR, '
                 '    target_address VARCHAR, '
+                '    token_address VARCHAR, '
                 '    sendETH_amount INTEGER NOT NULL, '
                 '    sendBTC_amount INTEGER NOT NULL, '
                 '    receiveBTC_address VARCHAR, '
@@ -252,15 +253,15 @@ class SQLiteStorage:
 
 ###################demo
 
-    def create_crosstransaction(self, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier ):
+    def create_crosstransaction(self, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier ):
         #identifier = encode_hex(privatekey_to_address(sha3(int(initiator_address,16) + int(target_address,16) + int(receiveBTC_address,16) + int(time.time()))))
 
         ###initiator_address = self.rest_api.raiden_api.raiden.default_registry.address
         ####ConnectionsInfoResource
         with self.write_lock, self.conn:
             self.conn.execute(
-                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?)',
-                (identifier, initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status),
+                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status),
             )
 
         print(identifier)
@@ -298,9 +299,9 @@ class SQLiteStorage:
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT OR REPLACE INTO crosstransaction_events('
-                '    identifier,initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status'
-                ') VALUES(?, ?, ?, ?, ?, ?, ?)',
-                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], status),
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status'
+                ') VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], status),
             )
 
         print("success")

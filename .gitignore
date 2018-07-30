@@ -84,3 +84,6 @@ raiden/raidenwebui/node_modules/
 .vscode
 .synapse
 raiden/smart_contracts/contracts.json
+
+# Mac
+*Ds_Store

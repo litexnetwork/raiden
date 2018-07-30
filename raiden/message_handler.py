@@ -125,7 +125,7 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
 def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
     print("recive message")
 
-    raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
+    raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
     accept="ok"
