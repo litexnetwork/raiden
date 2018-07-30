@@ -139,9 +139,12 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
 
+
+
+
     print("recive acceptcross")
     print("message's accept is %s",(message.accept))
-
+    raiden.start_send_crosstansfer(message.identifier)
 
 def on_message(raiden: RaidenService, message: Message):
     """ Return True if the message is known. """
