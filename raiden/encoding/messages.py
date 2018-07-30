@@ -83,8 +83,7 @@ identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
 cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',10,'10s')
 
-<<<<<<< HEAD
-=======
+
 CrossLockedTransfer = namedbuffer(
     'crosslockedtransfer',[
         cmdid(CROSSLOCKEDTRANSFER),
@@ -110,7 +109,6 @@ CrossLockedTransfer = namedbuffer(
         signature,
     ]
 )
->>>>>>> 0b6d644bf7cea75bcb3486a7ca20ae4ba7e62410
 
 AcceptCross = namedbuffer(
     'acceptcross',[

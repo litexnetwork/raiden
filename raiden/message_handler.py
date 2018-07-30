@@ -21,7 +21,8 @@ from raiden.messages import (
     Secret,
     SecretRequest,
     Crosstransaction,
-    AcceptCross)
+    AcceptCross,
+CrossLockedTransfer)
 from raiden.transfer.mediated_transfer.state import lockedtransfersigned_from_message
 from raiden.transfer.mediated_transfer.state_change import (
     ReceiveSecretRequest,
@@ -151,7 +152,7 @@ def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
     print("message's accept is %s",(message.accept))
     raiden.wal.change_crosstransaction_status(message.identifier, 3)
     raiden.start_send_crosstansfer(message.identifier)
-    
+
 
 def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedTransfer):
     locked_transfer_message = LockedTransfer(

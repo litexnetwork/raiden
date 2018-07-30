@@ -576,15 +576,15 @@ class RaidenService:
 
 
     # demo send crosstransaction
-    def start_crosstransaction(self,token_network_address,
+    def start_crosstransaction(self,token_network_identifier,
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
         self.transport.start_health_check(target_address)
         cross_id = create_default_crossid()
-        self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_address, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
+        self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
         print("get data from sqlite")
         print(self.wal.get_crosstransaction_by_identifier(cross_id))
-        crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_address, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
+        crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_identifier, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
         async_result = self.transport.send_async(
             target_address,
             bytes("123",'utf-8'),
