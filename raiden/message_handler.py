@@ -140,7 +140,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     accept=1
     acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
     print("creat accept ok")
-    #raiden.sign(acceptcross)
+    raiden.sign(acceptcross)
     print("creat sign ok")
     print(to_normalized_address(message.initiator_address))
     raiden.transport.send_async(
