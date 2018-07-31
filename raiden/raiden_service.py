@@ -649,7 +649,7 @@ class RaidenService:
             token_network_identifier,
             target,
         )
-
+        print("xxjj", init_initiator_statechange)
         self.handle_cross_state_change(init_initiator_statechange, cross_id)
 
     def handle_cross_state_change(self, state_change, cross_id, block_number=None):
@@ -663,9 +663,11 @@ class RaidenService:
 
             if type(event) == SendLockedTransfer:
                 locked_transfer_message = message_from_sendevent(event, self.address)
+                print("loked_tr_mess", locked_transfer_message.to_dict())
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
-
+                print('cross_message ok')
                 self.sign(cross_transfer_message)
+                print('corss_message sign ok')
                 self.transport.send_async(
                     cross_transfer_message.recipient,
                     bytes("456",'utf-8'),

@@ -158,7 +158,8 @@ def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
     raiden.wal.change_crosstransaction_status(message.identifier, 3)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
-    #raiden.start_send_crosstansfer(message.identifier)
+    print('start_send_crosstransfer')
+    raiden.start_send_crosstansfer(message.identifier)
 
 
 def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedTransfer):
