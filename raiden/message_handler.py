@@ -171,7 +171,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         message.token_network_address,
         message.token,
         message.channel,
-        message.transfered_amount,
+        message.transferred_amount,
         message.locked_amount,
         message.recipient,
         message.locksroot,
@@ -183,7 +183,8 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
     handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
-
+    print("get data from database")
+    print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
 
 
 
@@ -209,6 +210,7 @@ def on_message(raiden: RaidenService, message: Message):
     elif type(message) == AcceptCross:
         handle_message_acceptcross(raiden,message)
     elif type(message) == CrossLockedTransfer:
+        print('handle is ok')
         handle_message_crosslockedtransfer(raiden, message)
     else:
         log.error('Unknown message cmdid {}'.format(message.cmdid))

@@ -241,7 +241,7 @@ class MatrixTransport:
         self.log.info(
             'SEND ASYNC',
           #  receiver_address=to_normalized_address(receiver_address),
-         #   message=message,
+           message=message,
         # queue_name=queue_name,
         )
         if not is_binary_address(receiver_address):
