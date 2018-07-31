@@ -151,7 +151,7 @@ def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
     print("recive acceptcross")
     print("message's accept is %s",(message.accept))
     raiden.wal.change_crosstransaction_status(message.identifier, 3)
-    raiden.start_send_crosstansfer(message.identifier)
+    #raiden.start_send_crosstansfer(message.identifier)
 
 
 def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedTransfer):

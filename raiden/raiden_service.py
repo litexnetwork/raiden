@@ -9,7 +9,7 @@ import gevent
 from gevent.event import AsyncResult, Event
 from coincurve import PrivateKey
 import structlog
-from eth_utils import is_binary_address
+from eth_utils import is_binary_address, to_normalized_address
 
 from raiden.network.blockchain_service import BlockChainService
 from raiden.network.proxies import (
@@ -582,9 +582,11 @@ class RaidenService:
         self.transport.start_health_check(target_address)
         cross_id = create_default_crossid()
         self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
-        print("get data from sqlite")
+        print("write data to sqlite")
         print(self.wal.get_crosstransaction_by_identifier(cross_id))
         crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_identifier, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
+        print(to_normalized_address(target_address))
+
         async_result = self.transport.send_async(
             target_address,
             bytes("123",'utf-8'),
