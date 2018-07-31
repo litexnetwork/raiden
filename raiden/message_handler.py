@@ -129,27 +129,27 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
     raiden.handle_state_change(processed)
 
 def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
-    print("recive message")
+    print("recive crosstransaction")
 
     raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
-    print(message.to_dict())
+
     accept="ok"
     acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
-    raiden.sign(acceptcross)
+    print("creat accept ok")
+    #raiden.sign(acceptcross)
+    print("creat sign ok")
+    print(message.initiator_address)
     raiden.transport.send_async(
         message.initiator_address,
         bytes("123", 'utf-8'),
         acceptcross,
     )
+    print("send accept ok")
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
-
-
-
-
     print("recive acceptcross")
     print("message's accept is %s",(message.accept))
     raiden.wal.change_crosstransaction_status(message.identifier, 3)

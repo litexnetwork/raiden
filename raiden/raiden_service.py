@@ -615,16 +615,11 @@ class RaidenService:
         print(self.wal.get_crosstransaction_by_identifier(cross_id))
         crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_identifier, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
         self.sign(crosstransaction_message)
-        print(to_normalized_address(target_address))
-
         async_result = self.transport.send_async(
             target_address,
             bytes("123",'utf-8'),
             crosstransaction_message,
         )
-
-        print('ok')
-
         return  async_result
 
     # demo
