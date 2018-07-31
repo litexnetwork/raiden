@@ -105,7 +105,9 @@ AcceptCross = namedbuffer(
         message_identifier,
         initiator_address,
         target_address,
-        identifier
+        identifier,
+        accept,
+        signature
     ]
 )
 Crosstransaction = namedbuffer(

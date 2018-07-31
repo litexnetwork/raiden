@@ -1,6 +1,8 @@
 import structlog
 import random
 
+from eth_utils import to_normalized_address
+
 from raiden.raiden_service import RaidenService
 from raiden.utils import random_secret
 from raiden.routing import get_best_routes
@@ -140,7 +142,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     print("creat accept ok")
     #raiden.sign(acceptcross)
     print("creat sign ok")
-    print(message.initiator_address)
+    print(to_normalized_address(message.initiator_address))
     raiden.transport.send_async(
         message.initiator_address,
         bytes("123", 'utf-8'),
