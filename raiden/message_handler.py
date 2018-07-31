@@ -134,8 +134,10 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
+    print(message.to_dict())
     accept="ok"
     acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
+    raiden.sign(acceptcross)
     raiden.transport.send_async(
         message.initiator_address,
         bytes("123", 'utf-8'),

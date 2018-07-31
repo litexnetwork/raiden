@@ -514,7 +514,7 @@ class Crosstransaction(SignedMessage):
             'token_network_identifier':to_normalized_address(self.token_network_identifier),
             'sendETH_amount':self.sendETH_amount,
             'sendBTC_amount':self.sendBTC_amount,
-            'receiveBTC_address':to_normalized_address(self.receiveBTC_address),
+            'receiveBTC_address':(self.receiveBTC_address),
             'identifier':self.identifier,
             'signature' :encode_hex(self.signature),
         }
@@ -528,7 +528,7 @@ class Crosstransaction(SignedMessage):
             token_network_identifier = to_canonical_address(data['token_network_identifier']),
             sendETH_amount = data['sendETH_amount'],
             sendBTC_amount = data['sendBTC_amount'],
-            receiveBTC_address = to_canonical_address(data['receiveBTC_address']),
+            receiveBTC_address = (data['receiveBTC_address']),
             identifier = data['identifier']
         )
         message.signature = decode_hex(data['signature'])
