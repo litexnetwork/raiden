@@ -180,11 +180,11 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         message.initiator,
         message.fee
     )
-    handle_message_lockedtransfer(raiden, locked_transfer_message)
+    #handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
     print("get data from database")
-    print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
+    print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 
 
 
