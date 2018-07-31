@@ -1,17 +1,25 @@
-from typing import Dict
-
 from eth_utils import (
     decode_hex,
     event_abi_to_log_topic,
 )
+from web3 import Web3
 from web3.utils.abi import filter_by_type
 from web3.utils.events import get_event_data
 from eth_utils import to_checksum_address
-from web3.utils.filters import construct_event_filter_params
+from web3.utils.filters import construct_event_filter_params, LogFilter
+from pkg_resources import DistributionNotFound
+from gevent.lock import Semaphore
+
 from raiden_contracts.contract_manager import CONTRACT_MANAGER
 from raiden_contracts.constants import CONTRACT_TOKEN_NETWORK, EVENT_CHANNEL_OPENED
 
-from raiden.utils.typing import Address, ChannelID, BlockSpecification
+from raiden.utils.typing import Address, ChannelID, BlockSpecification, Dict
+
+try:
+    from eth_tester.exceptions import BlockNotFound
+except (ModuleNotFoundError, DistributionNotFound):
+    class BlockNotFound(Exception):
+        pass
 
 
 def get_filter_args_for_specific_event_from_channel(
@@ -89,3 +97,50 @@ def decode_event(abi: Dict, log: Dict):
     }
     event_abi = topic_to_event_abi[event_id]
     return get_event_data(event_abi, log)
+
+
+class StatelessFilter(LogFilter):
+    """ Like LogFilter, but uses eth_getLogs instead of installed filter
+
+    Pass latest block_number to get_(new|all)_entries to avoid querying it
+    """
+
+    def __init__(self, web3: Web3, filter_params: dict):
+        super().__init__(web3, filter_id=None)
+        self.filter_params = filter_params
+        self._last_block: int = -1
+        self._lock = Semaphore()
+
+    def get_new_entries(self, block_number: int = None):
+        with self._lock:
+            filter_params = self.filter_params.copy()
+            filter_params['fromBlock'] = max(
+                filter_params.get('fromBlock', 0),
+                self._last_block + 1,
+            )
+            # This logic may contain a race condition. It's possible that after
+            # `web.eth.blockNumber` and before `web3.eth.getLogs` a new block is mined.
+            # This is okay because any new logs on this new block will be fetched on the
+            # next call to `get_new_entries`
+            if block_number is None:
+                block_number = self.web3.eth.blockNumber
+            if self.filter_params.get('toBlock') in (None, 'latest', 'pending'):
+                filter_params['toBlock'] = block_number or 'latest'
+            self._last_block = filter_params.get('toBlock') or block_number
+            try:
+                return self.web3.eth.getLogs(filter_params)
+            except BlockNotFound:
+                return []
+
+    def get_all_entries(self, block_number: int = None):
+        with self._lock:
+            filter_params = self.filter_params.copy()
+            if block_number is None:
+                block_number = self.web3.eth.blockNumber
+            if self.filter_params.get('toBlock') in ('latest', 'pending'):
+                filter_params['toBlock'] = block_number
+            self._last_block = filter_params.get('toBlock') or block_number
+            try:
+                return self.web3.eth.getLogs(filter_params)
+            except BlockNotFound:
+                return []

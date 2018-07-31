@@ -1,3 +1,5 @@
+import json
+from enum import Enum
 from typing import Dict, List
 
 from eth_utils import (
@@ -9,12 +11,48 @@ from pkg_resources import DistributionNotFound
 from web3.utils.contracts import encode_transaction_data, find_matching_fn_abi
 from web3.utils.abi import get_abi_input_types
 from web3.contract import Contract
+from raiden.constants import EthClient
+from raiden.exceptions import InsufficientFunds, ReplacementTransactionUnderpriced
 from raiden.utils.filters import decode_event
 try:
     from eth_tester.exceptions import TransactionFailed
 except (ModuleNotFoundError, DistributionNotFound):
     class TransactionFailed(Exception):
         pass
+
+
+class ClientErrorInspectResult(Enum):
+    """Represents the action to follow after inspecting a client exception"""
+    PROPAGATE_ERROR = 1
+    INSUFFICIENT_FUNDS = 2
+    TRANSACTION_UNDERPRICED = 3
+    ALWAYS_FAIL = 4
+
+
+def inspect_client_error(val_err: ValueError, eth_node: str) -> ClientErrorInspectResult:
+    # both clients return invalid json. They use single quotes while json needs double ones.
+    json_response = str(val_err).replace("'", '"')
+    try:
+        error = json.loads(json_response)
+    except json.JSONDecodeError:
+        return ClientErrorInspectResult.PROPAGATE_ERROR
+
+    if eth_node == EthClient.GETH:
+        if error['code'] == -32000:
+            if 'insufficient funds' in error['message']:
+                return ClientErrorInspectResult.INSUFFICIENT_FUNDS
+            elif 'always failing transaction' in error['message']:
+                return ClientErrorInspectResult.ALWAYS_FAIL
+            elif error['message'] == 'replacement transaction underpriced':
+                return ClientErrorInspectResult.TRANSACTION_UNDERPRICED
+
+    elif eth_node == EthClient.PARITY:
+        if error['code'] == -32010 and 'insufficient funds' in error['message']:
+            return ClientErrorInspectResult.INSUFFICIENT_FUNDS
+        elif error['code'] == -32010 and 'another transaction with same nonce in the queue':
+            return ClientErrorInspectResult.TRANSACTION_UNDERPRICED
+
+    return ClientErrorInspectResult.PROPAGATE_ERROR
 
 
 class ContractProxy:
@@ -33,12 +71,26 @@ class ContractProxy:
     def transact(self, function_name: str, *args, **kargs):
         data = ContractProxy.get_transaction_data(self.contract.abi, function_name, args)
 
-        txhash = self.jsonrpc_client.send_transaction(
-            to=self.contract.address,
-            value=kargs.pop('value', 0),
-            data=decode_hex(data),
-            **kargs,
-        )
+        try:
+            txhash = self.jsonrpc_client.send_transaction(
+                to=self.contract.address,
+                value=kargs.pop('value', 0),
+                data=decode_hex(data),
+                **kargs,
+            )
+        except ValueError as e:
+            action = inspect_client_error(e, self.jsonrpc_client.eth_node)
+            if action == ClientErrorInspectResult.INSUFFICIENT_FUNDS:
+                raise InsufficientFunds('Insufficient ETH for transaction')
+            elif action == ClientErrorInspectResult.TRANSACTION_UNDERPRICED:
+                raise ReplacementTransactionUnderpriced(
+                    'Transaction was rejected. This is potentially '
+                    'caused by the reuse of the previous transaction '
+                    'nonce as well as paying an amount of gas less than or '
+                    'equal to the previous transaction\'s gas amount',
+                )
+
+            raise e
 
         return txhash
 
@@ -86,14 +138,15 @@ class ContractProxy:
         try:
             return fn(*args).estimateGas({'from': to_checksum_address(self.jsonrpc_client.sender)})
         except ValueError as err:
-            tx_would_fail = (
-                '-32015' in str(err) or
-                '-32000' in str(err)
+            action = inspect_client_error(err, self.jsonrpc_client.eth_node)
+            will_fail = action in (
+                ClientErrorInspectResult.INSUFFICIENT_FUNDS,
+                ClientErrorInspectResult.ALWAYS_FAIL,
             )
-            if tx_would_fail:  # -32015 is parity and -32000 is geth
+            if will_fail:
                 return None
-            else:
-                raise err
+
+            raise err
         except TransactionFailed:
             return None
 

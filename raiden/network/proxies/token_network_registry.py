@@ -1,4 +1,3 @@
-from binascii import unhexlify
 from typing import Optional
 
 import structlog
@@ -68,9 +67,6 @@ class TokenNetworkRegistry:
         self.client = jsonrpc_client
         self.node_address = privatekey_to_address(self.client.privkey)
 
-        self.address_to_tokennetwork = dict()
-        self.token_to_tokennetwork = dict()
-
     def get_token_network(self, token_address: typing.TokenAddress) -> Optional[typing.Address]:
         """ Return the token network address for the given token or None if
         there is no correspoding address.
@@ -104,7 +100,7 @@ class TokenNetworkRegistry:
             token_address,
         )
 
-        self.client.poll(unhexlify(transaction_hash))
+        self.client.poll(transaction_hash)
         receipt_or_none = check_transaction_threw(self.client, transaction_hash)
         if receipt_or_none:
             log.info(
@@ -158,7 +154,8 @@ class TokenNetworkRegistry:
     def filter_token_added_events(self):
         filter_ = self.proxy.contract.events.TokenNetworkCreated.createFilter(fromBlock=0)
         events = filter_.get_all_entries()
-        self.proxy.contract.web3.eth.uninstallFilter(filter_.filter_id)
+        if filter_.filter_id:
+            self.proxy.contract.web3.eth.uninstallFilter(filter_.filter_id)
 
         return events
 

@@ -32,7 +32,7 @@ def check_if_nightly(version):
         git_version, _ = subprocess.Popen(
             shlex.split('git describe --tags --abbrev=8'),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         ).communicate()
         git_version = git_version.decode()
 
@@ -98,7 +98,7 @@ master_doc = 'index'
 project = 'Raiden Network'
 author = 'Raiden Project'
 
-version_string = '0.3.0'
+version_string = '0.4.1'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -376,7 +376,7 @@ texinfo_documents = [
         author,
         'Raiden',
         'One line description of project.',
-        'Miscellaneous'
+        'Miscellaneous',
     ),
 ]
 

@@ -1,7 +1,6 @@
 from binascii import hexlify, unhexlify
 import os
 import re
-import string
 import sys
 import time
 import random
@@ -14,11 +13,8 @@ from eth_utils import remove_0x_prefix, keccak, is_checksum_address
 
 import raiden
 from raiden import constants
-from raiden.utils import typing
 from raiden.exceptions import InvalidAddress
-
-
-LETTERS = string.printable
+from raiden.utils import typing
 
 
 def safe_address_decode(address):
@@ -57,21 +53,25 @@ def is_minified_address(addr):
     return re.compile('(0x)?[a-f0-9]{6,8}').match(addr)
 
 
-def is_supported_client(client_version):
+def is_supported_client(
+        client_version: str,
+) -> typing.Tuple[bool, typing.Optional[constants.EthClient]]:
     if client_version.startswith('Parity'):
         major, minor, patch = [
             int(x) for x in re.search(r'//v(\d+)\.(\d+)\.(\d+)', client_version).groups()
         ]
         if (major, minor, patch) >= (1, 7, 6):
-            return True
+            return True, constants.EthClient.PARITY
     elif client_version.startswith('Geth'):
         major, minor, patch = [
             int(x) for x in re.search(r'/v(\d+)\.(\d+)\.(\d+)', client_version).groups()
         ]
         if (major, minor, patch) >= (1, 7, 2):
-            return True
+            return True, constants.EthClient.GETH
+    elif client_version.startswith('EthereumTester'):
+        return True, constants.EthClient.TESTER
 
-    return False
+    return False, None
 
 
 def address_checksum_and_decode(addr: str) -> typing.Address:
@@ -114,11 +114,6 @@ def pex(data: bytes) -> str:
 
 def lpex(lst: Iterable[bytes]) -> List[str]:
     return [pex(l) for l in lst]
-
-
-def activate_ultratb():
-    from IPython.core import ultratb
-    sys.excepthook = ultratb.VerboseTB(call_pdb=True, tb_offset=6)
 
 
 def host_port_to_endpoint(host: str, port: int) -> str:
@@ -204,15 +199,6 @@ def safe_lstrip_hex(val):
     return val
 
 
-def camel_to_snake_case(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-
-def snake_to_camel_case(snake_string):
-    return snake_string.title().replace('_', '')
-
-
 def get_system_spec():
     """Collect information about the system and installation.
     """
@@ -237,6 +223,7 @@ def get_system_spec():
         python_implementation=platform.python_implementation(),
         python_version=platform.python_version(),
         system=system_info,
+        distribution='bundled' if getattr(sys, 'frozen', False) else 'source',
     )
     return system_spec
 
@@ -283,21 +270,6 @@ def split_in_pairs(arg: Iterable) -> Iterable[Tuple]:
     # from the iterator each time and produces the desired result.
     iterator = iter(arg)
     return zip_longest(iterator, iterator)
-
-
-class releasing:
-    """context manager inspired by closing that will call release on __exit__
-    blocks, useful to release acquired locks.
-    """
-
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __enter__(self):
-        return self.obj
-
-    def __exit__(self, *exc_info):  # pylint: disable=unused-argument
-        self.obj.release()
 
 
 def compare_versions(deployed_version, current_version):

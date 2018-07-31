@@ -5,18 +5,8 @@ import subprocess
 from setuptools import setup, find_packages
 from setuptools import Command
 from setuptools.command.test import test as TestCommand
-from setuptools.command.build_py import build_py
 import distutils.log
 from distutils.spawn import find_executable
-
-
-class BuildPyCommand(build_py):
-
-    def run(self):
-        # ensure smoketest_config.json is generated
-        from raiden.tests.utils.smoketest import load_or_create_smoketest_config
-        load_or_create_smoketest_config()
-        build_py.run(self)
 
 
 class PyTest(TestCommand):
@@ -91,15 +81,6 @@ history = ''
 
 install_requires_replacements = {
     'git+https://github.com/LefterisJP/pystun@develop#egg=pystun': 'pystun',
-    (
-        'git+https://github.com/raiden-network/raiden-libs.git'
-        '@00b7c0023bedd3dc00f0ca3401839eaf4aed082c'
-        '#egg=raiden-libs'
-    ): 'raiden-libs',
-    (
-        'git+https://github.com/raiden-network/raiden-contracts.git'
-        '@2ab91aa4b062d88a124ce050551e2f4b8cb0da57#egg=raiden-contracts'
-    ): 'raiden-contracts',
 }
 
 install_requires = list(set(
@@ -109,7 +90,7 @@ install_requires = list(set(
 
 test_requirements = []
 
-version = '0.3.0'  # Do not edit: this is maintained by bumpversion (see .bumpversion_client.cfg)
+version = '0.4.1'  # Do not edit: this is maintained by bumpversion (see .bumpversion_client.cfg)
 
 setup(
     name='raiden',
@@ -134,7 +115,6 @@ setup(
     cmdclass={
         'test': PyTest,
         'compile_webui': CompileWebUI,
-        'build_py': BuildPyCommand,
     },
     use_scm_version=True,
     setup_requires=['setuptools_scm'],

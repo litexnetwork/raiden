@@ -1,10 +1,10 @@
-import warnings
-import time
-import os
 import copy
+import os
+import sys
+import warnings
 from binascii import unhexlify
-from typing import List, Dict
 from json.decoder import JSONDecodeError
+from itertools import count
 
 from pkg_resources import DistributionNotFound
 from web3 import Web3, HTTPProvider
@@ -14,34 +14,36 @@ from eth_utils import (
     encode_hex,
     to_checksum_address,
     to_canonical_address,
-    remove_0x_prefix,
     to_normalized_address,
 )
 import gevent
-import cachetools
 from gevent.lock import Semaphore
+from cachetools import TTLCache, cachedmethod
+from operator import attrgetter
 import structlog
 
-from raiden.utils import typing
 from raiden.exceptions import (
     AddressWithoutCode,
     EthNodeCommunicationError,
     RaidenShuttingDown,
 )
-from raiden.settings import GAS_PRICE, GAS_LIMIT, RPC_CACHE_TTL
+from raiden.settings import RPC_CACHE_TTL
 from raiden.utils import (
-    data_encoder,
+    is_supported_client,
     privatekey_to_address,
-    quantity_encoder,
 )
-from raiden.utils.typing import Address
+from raiden.utils.typing import List, Dict, Iterable, Address, BlockSpecification
+from raiden.utils.filters import StatelessFilter
 from raiden.network.rpc.smartcontract_proxy import ContractProxy
 from raiden.utils.solc import (
     solidity_unresolved_symbols,
     solidity_library_symbol,
     solidity_resolve_symbols,
 )
-from raiden.constants import NULL_ADDRESS
+from raiden.constants import (
+    NULL_ADDRESS,
+    TESTNET_GASPRICE_MULTIPLIER,
+)
 
 try:
     from eth_tester.exceptions import BlockNotFound
@@ -152,26 +154,6 @@ def dependencies_order_of_build(target_contract, dependencies_map):
     return order
 
 
-def format_data_for_rpccall(
-        sender: Address = b'',
-        to: Address = b'',
-        value: int = 0,
-        data: bytes = b'',
-        startgas: int = GAS_LIMIT,
-        gasprice: int = GAS_PRICE,
-):
-    """ Helper to format the transaction data. """
-
-    return {
-        'from': to_checksum_address(sender),
-        'to': to_checksum_address(to),
-        'value': quantity_encoder(value),
-        'gasPrice': quantity_encoder(gasprice),
-        'gas': quantity_encoder(startgas),
-        'data': data_encoder(data),
-    }
-
-
 class JSONRPCClient:
     """ Ethereum JSON RPC client.
 
@@ -207,25 +189,13 @@ class JSONRPCClient:
         # gets constructed before the RaidenService Object.
         self.stop_event = None
 
-        self.nonce_last_update = 0
-        self.nonce_available_value = None
-        self.nonce_lock = Semaphore()
-        self.nonce_update_interval = nonce_update_interval
-        self.nonce_offset = nonce_offset
+        self._nonce_offset = nonce_offset
+        self._nonce_lock = Semaphore()
         self.given_gas_price = gasprice
 
-        cache = cachetools.TTLCache(
-            maxsize=1,
-            ttl=RPC_CACHE_TTL,
-        )
-        cache_wrapper = cachetools.cached(cache=cache)
-        self.gaslimit = cache_wrapper(self._gaslimit)
-        cache = cachetools.TTLCache(
-            maxsize=1,
-            ttl=RPC_CACHE_TTL,
-        )
-        cache_wrapper = cachetools.cached(cache=cache)
-        self.gasprice = cache_wrapper(self._gasprice)
+        self._gaslimit_cache = TTLCache(maxsize=16, ttl=RPC_CACHE_TTL)
+        self._gasprice_cache = TTLCache(maxsize=16, ttl=RPC_CACHE_TTL)
+        self._nonce_cache = TTLCache(maxsize=16, ttl=nonce_update_interval)
 
         # web3
         if web3 is None:
@@ -246,6 +216,12 @@ class JSONRPCClient:
             connection_test = make_connection_test_middleware(self)
             self.web3.middleware_stack.inject(connection_test, layer=0)
 
+        supported, self.eth_node = is_supported_client(self.web3.version.node)
+
+        if not supported:
+            print('You need a Byzantium enabled ethereum node. Parity >= 1.7.6 or Geth >= 1.7.2')
+            sys.exit(1)
+
     def __repr__(self):
         return '<JSONRPCClient @%d>' % self.port
 
@@ -253,46 +229,25 @@ class JSONRPCClient:
         """ Return the most recent block. """
         return self.web3.eth.blockNumber
 
-    def nonce_needs_update(self):
-        if self.nonce_available_value is None:
-            return True
+    @cachedmethod(attrgetter('_nonce_cache'))
+    def _node_nonce_it(self) -> Iterable[int]:
+        """Returns counter iterator from the account's nonce
 
-        now = time.time()
+        As this method is backed by a TTLCache and _nonce_lock-protected,
+        it may be used as iterable-cache of the node's nonce, and refreshed every
+        nonce_update_inverval seconds, to ensure it's always in-sync.
+        """
+        transaction_count = self.web3.eth.getTransactionCount(
+            to_checksum_address(self.sender),
+            'pending',
+        )
+        nonce = transaction_count + self._nonce_offset
 
-        # Python's 2.7 time is not monotonic and it's affected by clock resets,
-        # force an update.
-        if self.nonce_last_update > now:
-            return True
+        return count(nonce)
 
-        return now - self.nonce_last_update > self.nonce_update_interval
-
-    def nonce_update_from_node(self):
-        nonce = -2
-        nonce_available_value = self.nonce_available_value or -1
-
-        # Wait until all tx are registered as pending
-        while nonce < nonce_available_value:
-            pending_transactions = self.web3.eth.getTransactionCount(
-                to_checksum_address(self.sender),
-            )
-            nonce = pending_transactions + self.nonce_offset
-
-            log.debug(
-                'updated nonce from server',
-                server=nonce,
-                local=nonce_available_value,
-            )
-
-        self.nonce_last_update = time.time()
-        self.nonce_available_value = nonce
-
-    def nonce(self):
-        with self.nonce_lock:
-            if self.nonce_needs_update():
-                self.nonce_update_from_node()
-
-            self.nonce_available_value += 1
-            return self.nonce_available_value - 1
+    def _nonce(self) -> int:
+        """Returns and increments the nonce on every call"""
+        return next(self._node_nonce_it())
 
     def inject_stop_event(self, event):
         self.stop_event = event
@@ -301,15 +256,17 @@ class JSONRPCClient:
         """ Return the balance of the account of given address. """
         return self.web3.eth.getBalance(to_checksum_address(account), 'pending')
 
-    def _gaslimit(self, location='latest') -> int:
+    @cachedmethod(attrgetter('_gaslimit_cache'))
+    def gaslimit(self, location='latest') -> int:
         gas_limit = self.web3.eth.getBlock(location)['gasLimit']
         return gas_limit * 8 // 10
 
-    def _gasprice(self) -> int:
+    @cachedmethod(attrgetter('_gasprice_cache'))
+    def gasprice(self) -> int:
         if self.given_gas_price:
             return self.given_gas_price
 
-        return self.web3.eth.gasPrice
+        return round(TESTNET_GASPRICE_MULTIPLIER * self.web3.eth.gasPrice)
 
     def check_startgas(self, startgas):
         if not startgas:
@@ -334,8 +291,8 @@ class JSONRPCClient:
             address=to_checksum_address(contract_address),
         )
 
-    def get_transaction_receipt(self, tx_hash):
-        return self.web3.eth.getTransactionReceipt(tx_hash)
+    def get_transaction_receipt(self, tx_hash: bytes):
+        return self.web3.eth.getTransactionReceipt(encode_hex(tx_hash))
 
     def deploy_solidity_contract(
             self,  # pylint: disable=too-many-locals
@@ -344,6 +301,7 @@ class JSONRPCClient:
             libraries=None,
             constructor_parameters=None,
             contract_path=None,
+            confirmations=None,
     ):
         """
         Deploy a solidity contract.
@@ -406,11 +364,10 @@ class JSONRPCClient:
 
                 dependency_contract['bin'] = bytecode
 
-                transaction_hash_hex = self.send_transaction(
+                transaction_hash = self.send_transaction(
                     to=Address(b''),
                     data=bytecode,
                 )
-                transaction_hash = unhexlify(transaction_hash_hex)
 
                 self.poll(transaction_hash)
                 receipt = self.get_transaction_receipt(transaction_hash)
@@ -438,14 +395,14 @@ class JSONRPCClient:
             constructor_parameters = ()
 
         contract = self.web3.eth.contract(abi=contract['abi'], bytecode=contract['bin'])
-        bytecode = contract.constructor(*constructor_parameters).buildTransaction()['data']
-        transaction_hash_hex = self.send_transaction(
+        contract_transaction = contract.constructor(*constructor_parameters).buildTransaction()
+        transaction_hash = self.send_transaction(
             to=Address(b''),
-            data=bytecode,
+            data=contract_transaction['data'],
+            startgas=contract_transaction['gas'],
         )
-        transaction_hash = unhexlify(transaction_hash_hex)
 
-        self.poll(transaction_hash)
+        self.poll(transaction_hash, confirmations)
         receipt = self.get_transaction_receipt(transaction_hash)
         contract_address = receipt['contractAddress']
 
@@ -469,7 +426,8 @@ class JSONRPCClient:
             value: int = 0,
             data: bytes = b'',
             startgas: int = None,
-    ):
+            gasprice: int = None,
+    ) -> bytes:
         """ Helper to send signed messages.
 
         This method will use the `privkey` provided in the constructor to
@@ -479,23 +437,31 @@ class JSONRPCClient:
         if to == to_canonical_address(NULL_ADDRESS):
             warnings.warn('For contract creation the empty string must be used.')
 
-        transaction = dict(
-            nonce=self.nonce(),
-            gasPrice=self.gasprice(),
-            gas=self.check_startgas(startgas),
-            value=value,
-            data=data,
-        )
+        with self._nonce_lock:
+            transaction = dict(
+                nonce=self._nonce(),
+                gasPrice=gasprice or self.gasprice(),
+                gas=self.check_startgas(startgas),
+                value=value,
+                data=data,
+            )
 
-        # add the to address if not deploying a contract
-        if to != b'':
-            transaction['to'] = to_checksum_address(to)
+            # add the to address if not deploying a contract
+            if to != b'':
+                transaction['to'] = to_checksum_address(to)
 
-        signed_txn = self.web3.eth.account.signTransaction(transaction, self.privkey)
+            signed_txn = self.web3.eth.account.signTransaction(transaction, self.privkey)
 
-        result = self.web3.eth.sendRawTransaction(signed_txn.rawTransaction)
-        encoded_result = encode_hex(result)
-        return remove_0x_prefix(encoded_result)
+            tx_hash = self.web3.eth.sendRawTransaction(signed_txn.rawTransaction)
+            log.debug(
+                'send_raw_transaction',
+                account=to_checksum_address(self.sender),
+                nonce=transaction['nonce'],
+                gasLimit=transaction['gas'],
+                gasPrice=transaction['gasPrice'],
+                tx_hash=tx_hash,
+            )
+            return tx_hash
 
     def poll(self, transaction_hash: bytes, confirmations: int = None):
         """ Wait until the `transaction_hash` is applied or rejected.
@@ -505,18 +471,12 @@ class JSONRPCClient:
             confirmations: Number of block confirmations that we will
                 wait for.
         """
-        if transaction_hash.startswith(b'0x'):
-            warnings.warn(
-                'transaction_hash seems to be already encoded, this will'
-                ' result in unexpected behavior',
-            )
-
         if len(transaction_hash) != 32:
             raise ValueError(
-                'transaction_hash length must be 32 (it might be hex encoded)',
+                'transaction_hash must be a 32 byte hash',
             )
 
-        transaction_hash = data_encoder(transaction_hash)
+        transaction_hash = encode_hex(transaction_hash)
 
         # used to check if the transaction was removed, this could happen
         # if gas price is too low:
@@ -541,7 +501,6 @@ class JSONRPCClient:
                 break
 
             last_result = transaction
-
             gevent.sleep(.5)
 
         if confirmations:
@@ -559,23 +518,26 @@ class JSONRPCClient:
             self,
             contract_address: Address,
             topics: List[str] = None,
-            from_block: typing.BlockSpecification = 0,
-            to_block: typing.BlockSpecification = 'latest',
+            from_block: BlockSpecification = 0,
+            to_block: BlockSpecification = 'latest',
     ) -> Filter:
         """ Create a filter in the ethereum node. """
-        return self.web3.eth.filter({
-            'fromBlock': from_block,
-            'toBlock': to_block,
-            'address': to_normalized_address(contract_address),
-            'topics': topics,
-        })
+        return StatelessFilter(
+            self.web3,
+            {
+                'fromBlock': from_block,
+                'toBlock': to_block,
+                'address': to_normalized_address(contract_address),
+                'topics': topics,
+            },
+        )
 
     def get_filter_events(
             self,
             contract_address: Address,
             topics: List[str] = None,
-            from_block: typing.BlockSpecification = 0,
-            to_block: typing.BlockSpecification = 'latest',
+            from_block: BlockSpecification = 0,
+            to_block: BlockSpecification = 'latest',
     ) -> List[Dict]:
         """ Get events for the given query. """
         try:
