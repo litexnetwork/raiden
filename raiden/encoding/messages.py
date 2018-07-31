@@ -69,7 +69,7 @@ sendBTC_amount = make_field('sendBTC_amount',32,'32s', integer(0, UINT256_MAX))
 receiveBTC_address = make_field('receiveBTC_address',34,'34s')
 identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
 cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
-accept = make_field('accept',10,'10s')
+accept = make_field('accept',1,'1s', integer(0, UINT256_MAX))
 
 
 CrossLockedTransfer = namedbuffer(

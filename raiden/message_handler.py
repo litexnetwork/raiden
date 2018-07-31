@@ -137,7 +137,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
 
-    accept="ok"
+    accept=1
     acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
     print("creat accept ok")
     #raiden.sign(acceptcross)
@@ -148,6 +148,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
         bytes("123", 'utf-8'),
         acceptcross,
     )
+    print((acceptcross.to_dict()))
     print("send accept ok")
 
 
