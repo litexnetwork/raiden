@@ -673,6 +673,7 @@ class RaidenService:
                     bytes("456",'utf-8'),
                     cross_transfer_message
                 )
+                print('corss_message send ok')
                 continue
 
             on_raiden_event(self, event)

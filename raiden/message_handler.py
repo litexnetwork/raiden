@@ -170,7 +170,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         message.nonce,
         message.token_network_address,
         message.token,
-        message.channel_idendifier,
+        message.channel,
         message.transfered_amount,
         message.locked_amount,
         message.recipient,
