@@ -60,6 +60,9 @@ from raiden.storage import wal, serialize, sqlite
 
 #demo
 from raiden.messages import message_from_sendevent
+from raiden.transfer.mediated_transfer.events import (
+    SendLockedTransfer,
+)
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
 
