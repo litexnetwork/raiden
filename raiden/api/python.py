@@ -20,7 +20,6 @@ from raiden.transfer.events import (
 from raiden.transfer.state_change import ActionChannelClose
 from raiden.exceptions import (
     AlreadyRegisteredTokenAddress,
-    ChannelBusyError,
     ChannelNotFound,
     EthNodeCommunicationError,
     InsufficientFunds,
@@ -29,6 +28,8 @@ from raiden.exceptions import (
     InvalidSettleTimeout,
     UnknownTokenAddress,
     DepositOverLimit,
+    DuplicatedChannelError,
+    TokenNotRegistered,
 )
 from raiden.settings import (
     DEFAULT_POLL_TIMEOUT,
@@ -36,7 +37,6 @@ from raiden.settings import (
 )
 from raiden.utils import (
     pex,
-    releasing,
     typing,
 )
 from raiden.api.rest import hexbytes_to_str, encode_byte_values
@@ -111,7 +111,7 @@ class RaidenAPI:
         try:
             registry = self.raiden.chain.token_network_registry(registry_address)
 
-            msg = 'After {} seconds the channel was not properly created.'.format(
+            msg = 'After {} seconds the token was not properly registered.'.format(
                 poll_timeout,
             )
 
@@ -164,7 +164,7 @@ class RaidenAPI:
             joinable_funds_target=joinable_funds_target,
         )
 
-    def token_network_leave(self, registry_address, token_address, only_receiving=True):
+    def token_network_leave(self, registry_address, token_address):
         """Close all channels and wait for settlement."""
         if not is_binary_address(token_address):
             raise InvalidAddress('token_address must be a valid address in binary')
@@ -182,7 +182,7 @@ class RaidenAPI:
             token_network_identifier,
         )
 
-        return connection_manager.leave(registry_address, only_receiving)
+        return connection_manager.leave(registry_address)
 
     def channel_open(
             self,
@@ -217,14 +217,36 @@ class RaidenAPI:
         if not is_binary_address(partner_address):
             raise InvalidAddress('Expected binary address format for partner in channel open')
 
+        chain_state = views.state_from_raiden(self.raiden)
+        channel_state = views.get_channelstate_for(
+            chain_state,
+            registry_address,
+            token_address,
+            partner_address,
+        )
+
+        if channel_state:
+            raise DuplicatedChannelError('Channel with given partner address already exists')
+
         registry = self.raiden.chain.token_network_registry(registry_address)
         token_network_address = registry.get_token_network(token_address)
-        token_network = self.raiden.chain.token_network(token_network_address)
 
-        channel_identifier = token_network.new_netting_channel(
-            partner_address,
-            settle_timeout,
+        if token_network_address is None:
+            raise TokenNotRegistered(
+                'Token network for token %s does not exist' % to_checksum_address(token_address),
+            )
+
+        token_network = self.raiden.chain.token_network(
+            registry.get_token_network(token_address),
         )
+
+        try:
+            token_network.new_netting_channel(
+                partner_address,
+                settle_timeout,
+            )
+        except DuplicatedChannelError:
+            log.info('partner opened channel first')
 
         msg = 'After {} seconds the channel was not properly created.'.format(
             poll_timeout,
@@ -238,8 +260,15 @@ class RaidenAPI:
                 partner_address,
                 retry_timeout,
             )
+        chain_state = views.state_from_raiden(self.raiden)
+        channel_state = views.get_channelstate_for(
+            chain_state,
+            registry_address,
+            token_address,
+            partner_address,
+        )
 
-        return channel_identifier
+        return channel_state.identifier
 
     def set_total_channel_deposit(
             self,
@@ -331,13 +360,7 @@ class RaidenAPI:
             raise InsufficientFunds(msg)
 
         # If concurrent operations are happening on the channel, fail the request
-        if not channel_proxy.channel_operations_lock.acquire(blocking=False):
-            raise ChannelBusyError(
-                f'Channel with id {channel_state.identifier} is '
-                f'busy with another ongoing operation',
-            )
-
-        with releasing(channel_proxy.channel_operations_lock):
+        with channel_proxy.lock_or_raise():
             # set_total_deposit calls approve
             # token.approve(netcontract_address, addendum)
             channel_proxy.set_total_deposit(total_deposit)
@@ -430,16 +453,7 @@ class RaidenAPI:
                     token_network_identifier,
                     channel_state.identifier,
                 )
-
-                # Check if we can acquire the lock. If we can't raise an exception, which
-                # will cause the ExitStack to exit, releasing all locks acquired so far
-                if not channel.channel_operations_lock.acquire(blocking=False):
-                    raise ChannelBusyError(
-                        f'Channel with id {channel_state.identifier} is '
-                        f'busy with another ongoing operation.',
-                    )
-
-                stack.push(channel.channel_operations_lock)
+                stack.enter_context(channel.lock_or_raise())
 
             for channel_state in channels_to_close:
                 channel_close = ActionChannelClose(

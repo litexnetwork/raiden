@@ -12,6 +12,7 @@ from raiden.api.python import RaidenAPI
 from raiden.utils import pex
 from raiden.exceptions import (
     AddressWithoutCode,
+    InvalidAmount,
     TransactionThrew,
 )
 from raiden.transfer import views
@@ -105,7 +106,9 @@ class ConnectionManager:
             joinable_funds_target: Amount of funds not initially assigned.
         """
         if funds <= 0:
-            raise ValueError('connecting needs a positive value for `funds`')
+            raise InvalidAmount(
+                'The funds to use in the connection need to be a positive integer',
+            )
 
         with self.lock:
             self.funds = funds
@@ -131,43 +134,26 @@ class ConnectionManager:
             else:
                 self._open_channels()
 
-    def leave_async(self, only_receiving=True):
+    def leave_async(self):
         """ Async version of `leave()` """
         leave_result = AsyncResult()
-        gevent.spawn(self.leave, only_receiving).link(leave_result)
+        gevent.spawn(self.leave).link(leave_result)
         return leave_result
 
-    def leave(self, registry_address, only_receiving=True):
+    def leave(self, registry_address):
         """ Leave the token network.
 
         This implies closing all channels and waiting for all channels to be
         settled.
-
-        Note: By default we're just discarding all channels for which we haven't
-        received anything.  This potentially leaves deposits locked in channels after
-        `closing`. This is "safe" from an accounting point of view (deposits
-        can not be lost), but may still be undesirable from a liquidity point
-        of view (deposits will only be freed after manually closing or after
-        the partner closed the channel).
-
-        If only_receiving is False then we close and settle all channels
-        irrespective of them having received transfers or not.
         """
         with self.lock:
             self.initial_channel_target = 0
 
-            if only_receiving:
-                channels_to_close = views.get_channestate_for_receiving(
-                    views.state_from_raiden(self.raiden),
-                    registry_address,
-                    self.token_address,
-                )
-            else:
-                channels_to_close = views.get_channelstate_open(
-                    chain_state=views.state_from_raiden(self.raiden),
-                    payment_network_id=registry_address,
-                    token_address=self.token_address,
-                )
+            channels_to_close = views.get_channelstate_open(
+                chain_state=views.state_from_raiden(self.raiden),
+                payment_network_id=registry_address,
+                token_address=self.token_address,
+            )
 
             partner_addresses = [
                 channel_state.partner_state.address
@@ -189,7 +175,7 @@ class ConnectionManager:
                 registry_address,
                 self.token_address,
                 channel_ids,
-                self.raiden.alarm.wait_time,
+                self.raiden.alarm.sleep_time,
             )
 
         return channels_to_close
@@ -292,7 +278,8 @@ class ConnectionManager:
         for partner in self.find_new_partners(qty_channels_to_open):
             try:
                 self.api.channel_open(
-                    self.token_network_identifier,
+                    self.registry_address,
+                    self.token_address,
                     partner,
                 )
             except DuplicatedChannelError:
@@ -302,7 +289,8 @@ class ConnectionManager:
 
             try:
                 self.api.set_total_channel_deposit(
-                    self.token_network_identifier,
+                    self.registry_address,
+                    self.token_address,
                     partner,
                     self._initial_funding_per_partner,
                 )
@@ -354,3 +342,12 @@ class ConnectionManager:
             - This attribute must be accessed with the lock held.
         """
         return self.initial_channel_target < 1
+
+    def __repr__(self) -> str:
+        open_channels = views.get_channelstate_open(
+            chain_state=views.state_from_raiden(self.raiden),
+            payment_network_id=self.registry_address,
+            token_address=self.token_address,
+        )
+        return f'{self.__class__.__name__}(target={self.initial_channel_target} ' +\
+            f'channels={len(open_channels)}:{open_channels!r})'

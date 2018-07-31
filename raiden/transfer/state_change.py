@@ -519,7 +519,7 @@ class ContractReceiveChannelBatchUnlock(StateChange):
 
     def __init__(
             self,
-            token_network_identifier: typing.PaymentNetworkID,
+            token_network_identifier: typing.TokenNetworkIdentifier,
             participant: typing.Address,
             partner: typing.Address,
             locksroot: typing.Locksroot,
@@ -527,8 +527,8 @@ class ContractReceiveChannelBatchUnlock(StateChange):
             returned_tokens: typing.TokenAmount,
     ):
 
-        if not isinstance(token_network_identifier, typing.T_PaymentNetworkID):
-            raise ValueError('payment_network_identifier must be of type PaymentNetworkID')
+        if not isinstance(token_network_identifier, typing.T_TokenNetworkIdentifier):
+            raise ValueError('token_network_identifier must be of type TokenNtetworkIdentifier')
 
         if not isinstance(participant, typing.T_Address):
             raise ValueError('participant must be of type address')
@@ -546,14 +546,13 @@ class ContractReceiveChannelBatchUnlock(StateChange):
     def __repr__(self):
         return (
             '<ContractReceiveChannelBatchUnlock'
-            'paymentid:{} token:{} channelid:{} participant:{} unlocked:{} returned:{}'
+            'token_network:{} participant:{} partner:{} locksroot:{} unlocked:{} returned:{}'
             '>'
         ).format(
-            self.payment_network_identifier,
-            self.token_address,
-            self.channel_identifier,
-            self.merkle_tree_leaves,
+            self.token_network_identifier,
             self.participant,
+            self.partner,
+            self.locksroot,
             self.unlocked_amount,
             self.returned_tokens,
         )
@@ -561,11 +560,10 @@ class ContractReceiveChannelBatchUnlock(StateChange):
     def __eq__(self, other):
         return (
             isinstance(other, ContractReceiveChannelBatchUnlock) and
-            self.payment_network_identifier == other.payment_network_identifier and
-            self.token_address == other.token_address and
-            self.channel_identifier == other.channel_identifier and
-            self.merkle_tree_leaves == other.merkle_tree_leaves and
+            self.token_network_identifier == other.token_network_identifier and
             self.participant == other.participant and
+            self.partner == other.partner and
+            self.locksroot == other.locksroot and
             self.unlocked_amount == other.unlocked_amount and
             self.returned_tokens == other.returned_tokens
         )

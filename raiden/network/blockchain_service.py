@@ -1,10 +1,7 @@
 import gevent
 from cachetools.func import ttl_cache
 import structlog
-from eth_utils import (
-    to_int,
-    is_binary_address,
-)
+from eth_utils import is_binary_address
 
 from raiden.network.rpc.client import JSONRPCClient
 from raiden.network.proxies import (
@@ -30,16 +27,11 @@ class BlockChainService:
             privatekey_bin: bytes,
             jsonrpc_client: JSONRPCClient,
     ):
-        self.address_to_token = dict()
         self.address_to_discovery = dict()
-        self.address_to_nettingchannel = dict()
-        self.address_to_registry = dict()
-        self.address_to_manager = dict()
-
-        self.address_to_token_network_registry = dict()
-        self.address_to_token_network = dict()
         self.address_to_secret_registry = dict()
-
+        self.address_to_token = dict()
+        self.address_to_token_network = dict()
+        self.address_to_token_network_registry = dict()
         self.identifier_to_payment_channel = dict()
 
         self.client = jsonrpc_client
@@ -57,7 +49,7 @@ class BlockChainService:
             return True
 
         current_block = self.block_number()
-        highest_block = to_int(hexstr=result['highestBlock'])
+        highest_block = result['highestBlock']
 
         if highest_block - current_block > 2:
             return False
@@ -81,19 +73,19 @@ class BlockChainService:
         else:
             interval = last_block_number - oldest
         assert interval > 0
-        last_timestamp = int(self.get_block_header(last_block_number)['timestamp'], 16)
-        first_timestamp = int(self.get_block_header(last_block_number - interval)['timestamp'], 16)
+        last_timestamp = self.get_block_header(last_block_number)['timestamp']
+        first_timestamp = self.get_block_header(last_block_number - interval)['timestamp']
         delta = last_timestamp - first_timestamp
         return delta / interval
 
     def get_block_header(self, block_number: int):
-        return self.client.web3.getBlock(block_number, False)
+        return self.client.web3.eth.getBlock(block_number, False)
 
     def next_block(self) -> int:
-        target_block_number = self.block_number() + 1
-        current_block = target_block_number
+        current_block = self.block_number()
+        target_block_number = current_block + 1
 
-        while not current_block >= target_block_number:
+        while current_block < target_block_number:
             current_block = self.block_number()
             gevent.sleep(0.5)
 

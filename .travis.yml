@@ -1,8 +1,9 @@
+conditions: v1
 stages:
   - name: lint
   - name: test
   - name: integration
-    if: type = cron OR commit_message =~ /\[ci integration\]/ OR (tag IS present AND tag =~ /^v[\d]+\.[\d]+\.[\d]+/)
+    if: type = cron OR commit_message =~ /\[ci integration\]/ OR tag IS present
   - name: deploy
     if: tag IS present AND tag =~ /^v[\d]+\.[\d]+\.[\d]+/
 
@@ -83,13 +84,13 @@ jobs:
     - stage: integration
       <<: *job-template-integration
       env:
-        - TEST='raiden/tests/integration --ignore=raiden/tests/integration/transfer --ignore=raiden/tests/integration/long_running --ignore=raiden/tests/integration/api --ignore=raiden/tests/integration/contracts'
+        - TEST='raiden/tests/integration --ignore=raiden/tests/integration/transfer --ignore=raiden/tests/integration/long_running --ignore=raiden/tests/integration/api --ignore=raiden/tests/integration/contracts --ignore=raiden/tests/integration/cli'
         - TRANSPORT_OPTIONS='--transport=udp'
 
     - stage: integration
       <<: *job-template-integration
       env:
-        - TEST='raiden/tests/integration --ignore=raiden/tests/integration/transfer --ignore=raiden/tests/integration/long_running --ignore=raiden/tests/integration/api --ignore=raiden/tests/integration/contracts'
+        - TEST='raiden/tests/integration --ignore=raiden/tests/integration/transfer --ignore=raiden/tests/integration/long_running --ignore=raiden/tests/integration/api --ignore=raiden/tests/integration/contracts --ignore=raiden/tests/integration/cli'
         - TRANSPORT_OPTIONS='--transport=matrix --local-matrix=${HOME}/.bin/run_synapse.sh'
         - RUN_SYNAPSE=1
 
@@ -137,10 +138,22 @@ jobs:
         - TRANSPORT_OPTIONS='--transport=matrix --local-matrix=${HOME}/.bin/run_synapse.sh'
         - RUN_SYNAPSE=1
 
+    - stage: integration
+      <<: *job-template-integration
+      env:
+        - TEST='raiden/tests/integration/cli'
+        - TRANSPORT_OPTIONS='--transport=udp'
+
+    - stage: integration
+      <<: *job-template-integration
+      env:
+        - TEST='raiden/tests/integration/cli'
+        - TRANSPORT_OPTIONS='--transport=matrix --local-matrix=${HOME}/.bin/run_synapse.sh'
+        - RUN_SYNAPSE=1
+
     - stage: deploy
       before_install: mkdir -p $HOME/.bin; export PATH=$PATH:$HOME/.bin; .travis/before_install.sh
       install: .travis/install.sh
-      before_script: .travis/before_script.sh
       script: RAIDENVERSION=$TRAVIS_TAG make bundle-docker
       deploy:
       - provider: releases
@@ -176,7 +189,6 @@ jobs:
       install:
         - .travis/install.sh
       before_script:
-        - .travis/before_script.sh
         - python setup.py build
         - python setup.py compile_webui
       script:

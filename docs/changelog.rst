@@ -1,8 +1,32 @@
 =========
 Changelog
 =========
+* :bug:`1821` Show a better error message when channel creation fails.
+* :bug:`1817` Change the webui error message when the token registration fails.
+* :feature:`1844` Log debug output to a file to make debugging of problems easier.
+* :bug:`1994` Starting Raiden with a corrupt database will now throw a proper error instead of crashing with an exception.
 
-* :feature:`1518` Update installation docs with Homebrew tap and update Homebrew formula on release
+* :release:`0.4.1 <2018-07-27>`
+* :bug:`1879` Leaving a token network should now work. Also removed the ``only_receiving`` parameter from the leave endpoint
+* :bug:`1897` Limit number of concurrent matrix connections so that raiden client does not crash.
+* :bug:`1976` Remove the ability to removedb. User should not be able to easily delete local state.
+* :feature:`1825` Added periodical update notification and security releases checks.
+* :bug:`1883` Properly update menu state when channel state changes on webui
+* :bug:`1969` Return E409 if negative ``initial_funds`` are given to the connect endpoint
+* :bug:`1960` Return E409 when trying to open a channel for a token that is not registered
+* :bug:`1916` Return E409 on two concurrent conflicting channel deposits
+* :bug:`1869` Various matrix improvements. Prevent DOS attacks, and race conditions that caused client crashes. Require peers to be present to send message to them. Improves user discovery across Matrix federation.
+* :bug:`1902` Check for ethnode connection at start and print proper error if Raiden can not connect
+* :bug:`1911` The syncing message is now printed properly and does not repeat across the screen
+* :bug:`1899` Print proper error without throwing exception if no accounts are found in the keystore
+* :bug:`1975` Fix balance hash generation for zero transfers and empty locksroot
+
+* :release:`0.4.0 <2018-07-19>`
+* :feature:`-` Considerable codebase refactoring.
+* :feature:`-` New Matrix transport protocol.
+* :feature:`-` Smart contracts refactoring for readability, gas costs and new features.
+* :feature:`-` Restartability in case of a proper shutdown of the Raiden node.
+* :feature:`1518` Update installation docs with Homebrew tap and update Homebrew formula on release.
 * :feature:`1195` Improve AccountManager error handling if keyfile is invalid.
 * :bug:`1237` Inform the user if geth binary is missing during raiden smoketest.
 * :feature:`1328` Use separate database directory per network id. This is a breaking change. You will need to copy your data from the previous directory to the new network id subdirectory.

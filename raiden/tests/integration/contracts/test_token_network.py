@@ -9,9 +9,9 @@ from raiden_contracts.constants import (
     TEST_SETTLE_TIMEOUT_MIN,
     TEST_SETTLE_TIMEOUT_MAX,
 )
+from raiden_libs.messages import BalanceProof
+from raiden_libs.utils.signing import sign_data
 
-from raiden.network.rpc.client import JSONRPCClient
-from raiden.network.proxies import TokenNetwork
 from raiden.constants import EMPTY_HASH
 from raiden.exceptions import (
     InvalidSettleTimeout,
@@ -19,19 +19,66 @@ from raiden.exceptions import (
     DuplicatedChannelError,
     TransactionThrew,
     ChannelIncorrectStateError,
+    DepositMismatch,
 )
+from raiden.network.proxies import TokenNetwork
+from raiden.network.rpc.client import JSONRPCClient
 from raiden.tests.utils import wait_blocks
-from raiden_libs.messages import BalanceProof
-from raiden_libs.utils.signing import sign_data
+
+
+def test_token_network_deposit_race(
+        token_network_proxy,
+        private_keys,
+        blockchain_rpc_ports,
+        token_proxy,
+        web3,
+):
+    assert token_network_proxy.settlement_timeout_min() == TEST_SETTLE_TIMEOUT_MIN
+    assert token_network_proxy.settlement_timeout_max() == TEST_SETTLE_TIMEOUT_MAX
+
+    token_network_address = to_canonical_address(token_network_proxy.proxy.contract.address)
+
+    c1_client = JSONRPCClient(
+        '0.0.0.0',
+        blockchain_rpc_ports[0],
+        private_keys[1],
+        web3=web3,
+    )
+    c2_client = JSONRPCClient(
+        '0.0.0.0',
+        blockchain_rpc_ports[0],
+        private_keys[2],
+        web3=web3,
+    )
+    c1_token_network_proxy = TokenNetwork(
+        c1_client,
+        token_network_address,
+    )
+    token_proxy.transfer(c1_client.sender, 10)
+    channel_identifier = c1_token_network_proxy.new_netting_channel(
+        c2_client.sender,
+        TEST_SETTLE_TIMEOUT_MIN,
+    )
+    assert channel_identifier is not None
+
+    c1_token_network_proxy.set_total_deposit(
+        2,
+        c2_client.sender,
+    )
+    with pytest.raises(DepositMismatch):
+        c1_token_network_proxy.set_total_deposit(
+            1,
+            c2_client.sender,
+        )
 
 
 def test_token_network_proxy_basics(
-    token_network_proxy,
-    private_keys,
-    blockchain_rpc_ports,
-    token_proxy,
-    chain_id,
-    web3,
+        token_network_proxy,
+        private_keys,
+        blockchain_rpc_ports,
+        token_proxy,
+        chain_id,
+        web3,
 ):
     # check settlement timeouts
     assert token_network_proxy.settlement_timeout_min() == TEST_SETTLE_TIMEOUT_MIN
@@ -111,7 +158,7 @@ def test_token_network_proxy_basics(
     initial_balance_c2 = token_proxy.balance_of(c2_client.sender)
     assert initial_balance_c2 == 0
     # no negative deposit
-    with pytest.raises(ValueError):
+    with pytest.raises(DepositMismatch):
         c1_token_network_proxy.set_total_deposit(
             -1,
             c2_client.sender,
@@ -179,12 +226,12 @@ def test_token_network_proxy_basics(
 
 
 def test_token_network_proxy_update_transfer(
-    token_network_proxy,
-    private_keys,
-    blockchain_rpc_ports,
-    token_proxy,
-    chain_id,
-    web3,
+        token_network_proxy,
+        private_keys,
+        blockchain_rpc_ports,
+        token_proxy,
+        chain_id,
+        web3,
 ):
     """Tests channel lifecycle, with `update_transfer` before settling"""
     token_network_address = to_canonical_address(token_network_proxy.proxy.contract.address)

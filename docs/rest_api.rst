@@ -21,12 +21,13 @@ Channel Object
 ::
 
     {
-       "channel_address": "0x2a65Aca4D5fC5B5C859090a6c34d164135398226",
+       "channel_identifier": "0xfb43f382bbdbf209f854e14b74d183970e26ad5c1fd1b74a20f8f6bb653c1617",
+       "token_network_identifier": "0x2a65Aca4D5fC5B5C859090a6c34d164135398226",
        "partner_address": "0x61C808D82A3Ac53231750daDc13c777b59310bD9",
        "token_address": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
        "balance": 35000000,
        "state": "opened",
-       "settle_timeout": 100,
+       "settle_timeout": 500,
        "reveal_timeout": 40
     }
 
@@ -34,14 +35,17 @@ Channel Object
 
 A channel object consists of a
 
-- ``channel_address`` should be a ``string`` containing the hexadecimal address of the
-  channel
+- ``channel_identifier`` should be a ``string`` containing the hexadecimal identifier of the
+  channel.
 
-- ``partner_address`` should be a ``string`` containing the hexadecimal address of the
-  partner with whom we have opened a channel
+- ``partner_address`` should be a ``string`` containing the EIP55-encoded address of the
+  partner with whom we have opened a channel.
 
-- ``token_address`` should be a ``string`` containing the hexadecimal address of the
+- ``token_address`` should be a ``string`` containing the EIP55-encoded address of the
   token we are trading in the channel.
+
+- ``token_network_identifier`` should be a ``string`` containing the EIP55-encoded address of the
+  token network the channel is part of.
 
 - ``balance`` should be an integer of the amount of the ``token_address`` token we have available for transferring.
 
@@ -122,6 +126,8 @@ Deploying
       }
 
    :statuscode 201: A token network for the token has been successfully created.
+   :statuscode 202: Creation of the token network for the token has been started but did not finish yet. Please check again once the related transaction has been mined.
+   :statuscode 402: Insufficient ETH to pay for the gas of the register on-chain transaction
    :statuscode 404: The given token address is invalid.
    :statuscode 409:
     - The token was already registered before, or
@@ -277,7 +283,7 @@ Channel Management
           "partner_address": "0x61C808D82A3Ac53231750daDc13c777b59310bD9",
           "token_address": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
           "balance": 35000000,
-          "settle_timeout": 100
+          "settle_timeout": 500
       }
 
    :reqjson int balance: Initial deposit to make to the channel.
@@ -301,12 +307,14 @@ Channel Management
           "token_address": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
           "balance": 35000000,
           "state": "open",
-          "settle_timeout": 100,
+          "settle_timeout": 500,
           "reveal_timeout": 30
       }
 
    :statuscode 201: Channel created successfully
+   :statuscode 202: Creation of the channel has been started but did not finish yet. Please check again once the related transaction has been mined.
    :statuscode 400: Provided JSON is in some way malformed
+   :statuscode 402: Insufficient ETH to pay for the gas of the channel open on-chain transaction
    :statuscode 408: Deposit event was not read in time by the Ethereum node
    :statuscode 409: Invalid input, e. g. too low a settle timeout
    :statuscode 500: Internal Raiden node error
@@ -360,15 +368,18 @@ Channel Management
       }
 
    :statuscode 200: Success
+   :statuscode 202: The requested action has been started but did not finish yet. Please check again once the related transaction has been mined.
    :statuscode 400:
     - The provided JSON is in some way malformed, or
     - there is nothing to do since neither ``state`` nor ``total_deposit`` have been given, or
     - the value of ``state`` is not a valid channel state.
-   :statuscode 402: Insufficient balance to do a deposit
+   :statuscode 402: Insufficient balance to do a deposit, or insufficient ETH to pay for the gas of the on-chain transaction
    :statuscode 408: Deposit event was not read in time by the Ethereum node
    :statuscode 409:
     - Provided channel does not exist or
-    - ``state`` and ``total_deposit`` have been attempted to update in the same request.
+    - ``state`` and ``total_deposit`` have been attempted to update in the same request or
+    - attempt to deposit token amount lower than on-chain balance of the channel
+    - attempt to deposit more tokens than the testing limit
    :statuscode 500: Internal Raiden node error
 
 Connection Management
@@ -433,9 +444,11 @@ Connection Management
    :reqjson int funds: amount of funding you want to put into the network
    :reqjson int initial_channel_target: number of channels to open proactively
    :reqjson float joinable_funds_target: fraction of funds that will be used to join channels opened by other participants
+   :statuscode 202: The joining of the token network for the token has been started but did not finish yet. Please check again once the related transaction has been mined.
    :statuscode 204: For a successful connection creation
-   :statuscode 402: If any of the channel deposits fail due to insufficient ETH balance
+   :statuscode 402: If any of the channel deposits fail due to insufficient ETH balance to pay for the gas of the on-chain transactions
    :statuscode 408: If a timeout happened during any of the transactions
+   :statuscode 409: If any of the provided input to the call is invalid.
    :statuscode 500: Internal Raiden node error
 
 .. http:delete:: /api/(version)/connections/(token_address)
@@ -449,12 +462,6 @@ Connection Management
       DELETE /api/1/connection HTTP/1.1
       Host: localhost:5001
       Content-Type: application/json
-
-      {
-          "only_receiving_channels": false
-      }
-
-   :reqjson boolean only_receiving_channels: Only close and settle channels where your node has received transfers. Defaults to ``true``.
 
    **Example Response**:
 
@@ -473,12 +480,6 @@ Connection Management
 
    :statuscode 200: For successfully leaving a token network
    :statuscode 500: Internal Raiden node error
-
-   .. note::
-
-      The default behavior to close and settle only receiving channels is safe from an accounting point of view since deposits can't be lost and provides for the fastest and cheapest way to leave a token network when you want to shut down your node.
-
-      If the default behaviour is not desired and the goal is to leave all channels irrespective of having received transfers or not then you should provide as payload to the request ``only_receiving_channels=false``
 
 Transfers
 =========
@@ -531,13 +532,15 @@ Querying Events
 ===============
 
 Events are kept by the node. Once an event endpoint is queried the relevant events
-from either the beginning of time or the given block are returned.
+from either the beginning of time or the given block are returned. Events are returned in a sorted list with the most recent events on the top of the list.
 
 Events are queried by two different endpoints depending on whether they are related
 to a specific channel or not.
 
 All events can be filtered down by providing the query string arguments ``from_block``
-and/or ``to_block`` to query only a events from a limited range of blocks.
+and/or ``to_block`` to query only a events from a limited range of blocks. The block number
+argument needs to be in the range of 0 to UINT64_MAX. Any blocknumber outside this range will
+be rejected.
 
 .. http:get:: /api/(version)/events/network
 
@@ -575,6 +578,7 @@ and/or ``to_block`` to query only a events from a limited range of blocks.
 
    :statuscode 200: For successful query
    :statuscode 400: If the provided query string is malformed
+   :statuscode 409: If the given block number argument is invalid
    :statuscode 500: Internal Raiden node error
 
 .. http:get:: /api/(version)/events/tokens/(token_address)
@@ -598,13 +602,13 @@ and/or ``to_block`` to query only a events from a limited range of blocks.
       [
           {
               "event_type": "ChannelNew",
-              "settle_timeout": 10,
+              "settle_timeout": 500,
               "netting_channel": "0xC0ea08A2d404d3172d2AdD29A45be56dA40e2949",
               "participant1": "0x4894A542053248E0c504e3dEF2048c08f73E1CA6",
               "participant2": "0x356857Cd22CBEFccDa4e96AF13b408623473237A"
           }, {
               "event_type": "ChannelNew",
-              "settle_timeout": 15,
+              "settle_timeout": 1500,
               "netting_channel": "0x61C808D82A3Ac53231750daDc13c777b59310bD9",
               "participant1": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
               "participant2": "0xc7262f1447FCB2f75AB14B2A28DeEd6006eEA95B"
@@ -614,6 +618,7 @@ and/or ``to_block`` to query only a events from a limited range of blocks.
    :statuscode 200: For successful query
    :statuscode 400: If the provided query string is malformed
    :statuscode 404: If the token does not exist
+   :statuscode 409: If the given block number argument is invalid
    :statuscode 500: Internal Raiden node error
 
 .. http:get:: /api/(version)/events/channels/(channel_address)
@@ -656,4 +661,5 @@ and/or ``to_block`` to query only a events from a limited range of blocks.
   :statuscode 200: For successful query
   :statuscode 400: If the provided query string is malformed
   :statuscode 404: If the channel does not exist
+  :statuscode 409: If the given block number argument is invalid
   :statuscode 500: Internal Raiden node error

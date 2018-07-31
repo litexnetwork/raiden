@@ -22,18 +22,20 @@ from raiden.exceptions import (
     AddressWithoutCode,
     AlreadyRegisteredTokenAddress,
     APIServerPortInUseError,
-    ChannelBusyError,
     ChannelNotFound,
     DuplicatedChannelError,
     EthNodeCommunicationError,
     InsufficientFunds,
     InvalidAddress,
+    InvalidBlockNumberInput,
     InvalidAmount,
     InvalidSettleTimeout,
     SamePeerAddress,
     TransactionThrew,
     UnknownTokenAddress,
     DepositOverLimit,
+    DepositMismatch,
+    TokenNotRegistered,
 )
 from raiden.api.v1.encoding import (
     AddressListSchema,
@@ -81,7 +83,6 @@ ERROR_STATUS_CODES = [
     HTTPStatus.PAYMENT_REQUIRED,
     HTTPStatus.BAD_REQUEST,
     HTTPStatus.NOT_FOUND,
-    HTTPStatus.EXPECTATION_FAILED,
 ]
 
 URLS_V1 = [
@@ -361,10 +362,20 @@ class RestAPI:
                 registry_address,
                 token_address,
             )
+        except EthNodeCommunicationError:
+            return api_response(
+                result='',
+                status_code=HTTPStatus.ACCEPTED,
+            )
         except (InvalidAddress, AlreadyRegisteredTokenAddress, TransactionThrew) as e:
             return api_error(
                 errors=str(e),
                 status_code=HTTPStatus.CONFLICT,
+            )
+        except InsufficientFunds as e:
+            return api_error(
+                errors=str(e),
+                status_code=HTTPStatus.PAYMENT_REQUIRED,
             )
 
         return api_response(
@@ -390,11 +401,21 @@ class RestAPI:
                 settle_timeout,
                 reveal_timeout,
             )
+        except EthNodeCommunicationError:
+            return api_response(
+                result='',
+                status_code=HTTPStatus.ACCEPTED,
+            )
         except (InvalidAddress, InvalidSettleTimeout, SamePeerAddress,
-                AddressWithoutCode, DuplicatedChannelError) as e:
+                AddressWithoutCode, DuplicatedChannelError, TokenNotRegistered) as e:
             return api_error(
                 errors=str(e),
                 status_code=HTTPStatus.CONFLICT,
+            )
+        except InsufficientFunds as e:
+            return api_error(
+                errors=str(e),
+                status_code=HTTPStatus.PAYMENT_REQUIRED,
             )
 
         if balance:
@@ -406,10 +427,10 @@ class RestAPI:
                     partner_address,
                     balance,
                 )
-            except EthNodeCommunicationError as e:
-                return api_error(
-                    errors=str(e),
-                    status_code=HTTPStatus.REQUEST_TIMEOUT,
+            except EthNodeCommunicationError:
+                return api_response(
+                    result='',
+                    status_code=HTTPStatus.ACCEPTED,
                 )
             except InsufficientFunds as e:
                 return api_error(
@@ -419,7 +440,12 @@ class RestAPI:
             except DepositOverLimit as e:
                 return api_error(
                     errors=str(e),
-                    status_code=HTTPStatus.EXPECTATION_FAILED,
+                    status_code=HTTPStatus.CONFLICT,
+                )
+            except DepositMismatch as e:
+                return api_error(
+                    errors=str(e),
+                    status_code=HTTPStatus.CONFLICT,
                 )
 
         channel_state = views.get_channelstate_for(
@@ -435,22 +461,6 @@ class RestAPI:
             result=result.data,
             status_code=HTTPStatus.CREATED,
         )
-
-    def close(self, registry_address, token_address, partner_address):
-        try:
-            raiden_service_result = self.raiden_api.channel_close(
-                registry_address,
-                token_address,
-                partner_address,
-            )
-        except ChannelBusyError as e:
-            return api_error(
-                errors=str(e),
-                status_code=HTTPStatus.CONFLICT,
-            )
-
-        result = self.channel_schema.dump(raiden_service_result)
-        return api_response(result=result.data)
 
     def connect(
             self,
@@ -469,15 +479,20 @@ class RestAPI:
                 initial_channel_target,
                 joinable_funds_target,
             )
-        except EthNodeCommunicationError as e:
-            return api_error(
-                errors=str(e),
-                status_code=HTTPStatus.REQUEST_TIMEOUT,
+        except EthNodeCommunicationError:
+            return api_response(
+                result='',
+                status_code=HTTPStatus.ACCEPTED,
             )
         except InsufficientFunds as e:
             return api_error(
                 errors=str(e),
                 status_code=HTTPStatus.PAYMENT_REQUIRED,
+            )
+        except InvalidAmount as e:
+            return api_error(
+                errors=str(e),
+                status_code=HTTPStatus.CONFLICT,
             )
 
         return api_response(
@@ -485,11 +500,10 @@ class RestAPI:
             status_code=HTTPStatus.NO_CONTENT,
         )
 
-    def leave(self, registry_address, token_address, only_receiving):
+    def leave(self, registry_address, token_address):
         closed_channels = self.raiden_api.token_network_leave(
             registry_address,
             token_address,
-            only_receiving,
         )
         closed_channels = [
             self.channel_schema.dump(channel_state).data
@@ -555,11 +569,15 @@ class RestAPI:
         return api_response(result=result.data)
 
     def get_network_events(self, registry_address, from_block, to_block):
-        raiden_service_result = self.raiden_api.get_network_events(
-            registry_address,
-            from_block,
-            to_block,
-        )
+        try:
+            raiden_service_result = self.raiden_api.get_network_events(
+                registry_address,
+                from_block,
+                to_block,
+            )
+        except InvalidBlockNumberInput as e:
+            return api_error(str(e), status_code=HTTPStatus.CONFLICT)
+
         return api_response(result=normalize_events_list(raiden_service_result))
 
     def get_token_network_events(self, token_address, from_block, to_block):
@@ -572,6 +590,8 @@ class RestAPI:
             return api_response(result=normalize_events_list(raiden_service_result))
         except UnknownTokenAddress as e:
             return api_error(str(e), status_code=HTTPStatus.NOT_FOUND)
+        except InvalidBlockNumberInput as e:
+            return api_error(str(e), status_code=HTTPStatus.CONFLICT)
 
     def get_channel_events(
             self,
@@ -580,12 +600,16 @@ class RestAPI:
             from_block=None,
             to_block=None,
     ):
-        raiden_service_result = self.raiden_api.get_channel_events(
-            token_address,
-            partner_address,
-            from_block,
-            to_block,
-        )
+        try:
+            raiden_service_result = self.raiden_api.get_channel_events(
+                token_address,
+                partner_address,
+                from_block,
+                to_block,
+            )
+        except InvalidBlockNumberInput as e:
+            return api_error(str(e), status_code=HTTPStatus.CONFLICT)
+
         return api_response(result=normalize_events_list(raiden_service_result))
 
     def get_channel(self, registry_address, token_address, partner_address):
@@ -658,7 +682,7 @@ class RestAPI:
         if transfer_result is False:
             return api_error(
                 errors="Payment couldn't be completed "
-                "(insufficient funds or no route to target).",
+                "(insufficient funds, no route to target or target offline).",
                 status_code=HTTPStatus.CONFLICT,
             )
 
@@ -689,10 +713,10 @@ class RestAPI:
                 channel_state.partner_state.address,
                 total_deposit,
             )
-        except ChannelBusyError as e:
-            return api_error(
-                errors=str(e),
-                status_code=HTTPStatus.CONFLICT,
+        except EthNodeCommunicationError:
+            return api_response(
+                result='',
+                status_code=HTTPStatus.ACCEPTED,
             )
         except InsufficientFunds as e:
             return api_error(
@@ -702,7 +726,12 @@ class RestAPI:
         except DepositOverLimit as e:
             return api_error(
                 errors=str(e),
-                status_code=HTTPStatus.EXPECTATION_FAILED,
+                status_code=HTTPStatus.CONFLICT,
+            )
+        except DepositMismatch as e:
+            return api_error(
+                errors=str(e),
+                status_code=HTTPStatus.CONFLICT,
             )
 
         updated_channel_state = self.raiden_api.get_channel(
@@ -727,10 +756,15 @@ class RestAPI:
                 channel_state.token_address,
                 channel_state.partner_state.address,
             )
-        except ChannelBusyError as e:
+        except EthNodeCommunicationError:
+            return api_response(
+                result='',
+                status_code=HTTPStatus.ACCEPTED,
+            )
+        except InsufficientFunds as e:
             return api_error(
                 errors=str(e),
-                status_code=HTTPStatus.CONFLICT,
+                status_code=HTTPStatus.PAYMENT_REQUIRED,
             )
 
         updated_channel_state = self.raiden_api.get_channel(

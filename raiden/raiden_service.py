@@ -266,22 +266,27 @@ class RaidenService:
             # installed starting from this position without losing events.
             last_log_block_number = views.block_number(self.wal.state_manager.current_state)
 
-        self.install_and_query_payment_network_filters(
-            self.default_registry.address,
+        # Install the filters using the correct from_block value, otherwise
+        # blockchain logs can be lost.
+        self.install_all_blockchain_filters(
+            self.default_registry,
+            self.default_secret_registry,
             last_log_block_number,
         )
 
-        # Regarding the timing of starting the alarm task it is important to:
-        # - Install the filters which will be polled by poll_blockchain_events
-        #   after the state has been primed, otherwise the state changes won't
-        #   have effect.
-        # - Install the filters using the correct from_block value, otherwise
-        #   blockchain logs can be lost.
+        # Complete the first_run of the alarm task and synchronize with the
+        # blockchain since the last run.
+        #
+        # Notes about setup order:
+        # - The filters must be polled after the node state has been primed,
+        # otherwise the state changes won't have effect.
+        # - The alarm must complete its first run  before the transport is started,
+        #  to avoid rejecting messages for unknown channels.
         self.alarm.register_callback(self._callback_new_block)
+        self.alarm.first_run()
+
         self.alarm.start()
 
-        # Start the transport after the registry is queried to avoid warning
-        # about unknown channels.
         queueids_to_queues = views.get_all_messagequeues(views.state_from_raiden(self))
         self.transport.start(self, queueids_to_queues)
 
@@ -382,7 +387,7 @@ class RaidenService:
         # expected side-effects are properly applied (introduced by the commit
         # 3686b3275ff7c0b669a6d5e2b34109c3bdf1921d)
         with self.event_poll_lock:
-            for event in self.blockchain_events.poll_blockchain_events():
+            for event in self.blockchain_events.poll_blockchain_events(current_block_number):
                 # These state changes will be procesed with a block_number
                 # which is /larger/ than the ChainState's block_number.
                 on_blockchain_event(self, event, current_block_number, chain_id)
@@ -407,26 +412,44 @@ class RaidenService:
 
         message.sign(self.private_key)
 
-    def install_and_query_payment_network_filters(
+    def install_all_blockchain_filters(
             self,
-            token_network_registry_address,
-            from_block=0,
+            token_network_registry_proxy,
+            secret_registry_proxy,
+            from_block,
     ):
-        token_network_registry = self.chain.token_network_registry(token_network_registry_address)
-
-        # Install the filters and then poll them and dispatch the events to the WAL
         with self.event_poll_lock:
+            node_state = views.state_from_raiden(self)
+            channels = views.list_all_channelstate(node_state)
+            token_networks = views.get_token_network_identifiers(
+                node_state,
+                token_network_registry_proxy.address,
+            )
+
             self.blockchain_events.add_token_network_registry_listener(
-                token_network_registry,
+                token_network_registry_proxy,
+                from_block,
+            )
+            self.blockchain_events.add_secret_registry_listener(
+                secret_registry_proxy,
                 from_block,
             )
 
-            chain_id = self.chain.network_id
-            for event in self.blockchain_events.poll_blockchain_events():
-                on_blockchain_event(
-                    self,
-                    event, event.event_data['block_number'],
-                    chain_id,
+            for token_network in token_networks:
+                token_network_proxy = self.chain.token_network(token_network)
+                self.blockchain_events.add_token_network_listener(
+                    token_network_proxy,
+                    from_block,
+                )
+
+            for channel_state in channels:
+                channel_proxy = self.chain.payment_channel(
+                    channel_state.token_network_identifier,
+                    channel_state.identifier,
+                )
+                self.blockchain_events.add_payment_channel_listener(
+                    channel_proxy,
+                    from_block,
                 )
 
     def connection_manager_for_token_network(self, token_network_identifier):
@@ -463,7 +486,7 @@ class RaidenService:
         if connection_managers:
             waiting.wait_for_settle_all_channels(
                 self,
-                self.alarm.wait_time,
+                self.alarm.sleep_time,
             )
 
     def mediated_transfer_async(
@@ -515,7 +538,7 @@ class RaidenService:
         whereas the mediated transfer requires 6 messages.
         """
 
-        self.transport.start_health_check(target)
+        self.start_health_check_for(target)
 
         if identifier is None:
             identifier = create_default_identifier()
@@ -537,7 +560,7 @@ class RaidenService:
             identifier,
     ):
 
-        self.transport.start_health_check(target)
+        self.start_health_check_for(target)
 
         if identifier is None:
             identifier = create_default_identifier()
@@ -571,6 +594,7 @@ class RaidenService:
         self.handle_state_change(init_mediator_statechange)
 
     def target_mediated_transfer(self, transfer: LockedTransfer):
+        self.start_health_check_for(transfer.initiator)
         init_target_statechange = target_init(transfer)
         self.handle_state_change(init_target_statechange)
 

@@ -162,3 +162,6 @@ class CrossTransaction:
         transactions = self.storage.change_crosstransaction_status(identifier,status)
         return transactions
 '''
+    @property
+    def version(self):
+        return self.storage.get_version()

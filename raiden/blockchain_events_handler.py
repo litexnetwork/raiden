@@ -103,7 +103,7 @@ def handle_channel_new(raiden, event, current_block_number):
         # the channel state was queried
         raiden.blockchain_events.add_payment_channel_listener(
             channel_proxy,
-            from_block=data['blockNumber'],
+            from_block=data['blockNumber'] + 1,
         )
 
     else:
@@ -148,7 +148,7 @@ def handle_channel_new_balance(raiden, event, current_block_number):
         )
         raiden.handle_state_change(newbalance_statechange, current_block_number)
 
-        if balance_was_zero:
+        if balance_was_zero and participant_address != raiden.address:
             connection_manager = raiden.connection_manager_for_token_network(
                 token_network_identifier,
             )
