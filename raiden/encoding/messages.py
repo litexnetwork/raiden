@@ -63,6 +63,7 @@ signature = make_field('signature', 65, '65s')
 #demo
 initiator_address = make_field('initiator_address',20,'20s')
 target_address = make_field('target_address',20,'20s')
+token_network_identifier = make_field('token_network_identifier',20,'20s')
 sendETH_amount = make_field('sendETH_amount',32,'32s', integer(0, UINT256_MAX))
 sendBTC_amount = make_field('sendBTC_amount',32,'32s', integer(0, UINT256_MAX))
 receiveBTC_address = make_field('receiveBTC_address',20,'20s')
@@ -114,7 +115,7 @@ Crosstransaction = namedbuffer(
         message_identifier,
         initiator_address,
         target_address,
-        token_network_address,
+        token_network_identifier,
         sendETH_amount,
         sendBTC_amount,
         receiveBTC_address,
