@@ -28,6 +28,10 @@ def restore_from_latest_snapshot(transition_function, storage):
 
 
 class WriteAheadLog:
+    @property
+    def version(self):
+        return self.storage.get_version()
+
     def __init__(self, state_manager, storage):
         self.state_manager = state_manager
         self.state_change_id = None
