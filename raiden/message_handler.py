@@ -181,7 +181,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         message.initiator,
         message.fee
     )
-    locked_transfer_message.sender = message.sender
+    #locked_transfer_message.sender = message.sender
     locked_transfer_message.signature = message.signature
     handle_message_lockedtransfer(raiden, locked_transfer_message)
 
