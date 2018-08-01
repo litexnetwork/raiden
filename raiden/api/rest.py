@@ -926,3 +926,7 @@ class RestAPI:
     def get_crosstransaction_all(self):
         result = self.raiden_api.get_crosstransaction_all()
         return  result
+
+    def get_state_change_by_r(self,hash_r):
+        self.raiden_api.get_state_change_by_r(hash_r)
+        return "hash_r is ok"

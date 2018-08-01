@@ -1,7 +1,7 @@
 import structlog
 import random
 
-from eth_utils import to_normalized_address
+from eth_utils import to_normalized_address, encode_hex
 
 from raiden.raiden_service import RaidenService
 from raiden.utils import random_secret

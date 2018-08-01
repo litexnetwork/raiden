@@ -9,7 +9,7 @@ import gevent
 from gevent.event import AsyncResult, Event
 from coincurve import PrivateKey
 import structlog
-from eth_utils import is_binary_address, to_normalized_address
+from eth_utils import is_binary_address, to_normalized_address, encode_hex
 
 from raiden.network.blockchain_service import BlockChainService
 from raiden.network.proxies import (

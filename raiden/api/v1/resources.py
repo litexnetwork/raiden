@@ -242,6 +242,5 @@ class GetCrossTransactionById(BaseResource):
 class ReciveHashResource(BaseResource):
 
     def get(self,hash_r):
-        print(hash_r)
+        return  self.rest_api.get_state_change_by_r(hash_r)
 
-        return 'ok'
