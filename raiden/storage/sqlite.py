@@ -255,15 +255,32 @@ class SQLiteStorage:
 
 ###################demo
 
-    def create_crosstransaction(self, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier ):
+    def get_cross_state_change_by_identifier(self,identifier):
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            'SELECT data FROM state_changes WHERE identifier = ?', (identifier,),
+        )
+
+        entry = cursor.fetchall()[0]
+
+        res = self.serializer.deserialize(entry[0])
+
+        #res = cursor.fetchall()[0]
+
+
+
+        return res
+
+    def create_crosstransaction(self, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier):
         #identifier = encode_hex(privatekey_to_address(sha3(int(initiator_address,16) + int(target_address,16) + int(receiveBTC_address,16) + int(time.time()))))
 
         ###initiator_address = self.rest_api.raiden_api.raiden.default_registry.address
         ####ConnectionsInfoResource
         with self.write_lock, self.conn:
             self.conn.execute(
-                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
-                (identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status),
+                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, 0, ""),
             )
 
         print(identifier)
@@ -307,9 +324,48 @@ class SQLiteStorage:
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT OR REPLACE INTO crosstransaction_events('
-                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status'
-                ') VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
-                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], status),
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], status, entry[8], entry[9]),
             )
 
         print("success")
+
+
+    def get_crosstransaction_by_r(self, hash_r):
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            'SELECT * FROM crosstransaction_events WHERE hash_r = ?', (hash_r,),
+        )
+
+        res = cursor.fetchall()[0]
+
+
+
+        return res
+
+
+    def change_crosstransaction_statechangeid(self,identifier,id):
+
+        entry = self.get_crosstransaction_by_identifier(identifier)
+
+        with self.write_lock, self.conn:
+            self.conn.execute(
+                'INSERT OR REPLACE INTO crosstransaction_events('
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7], id, entry[9]),
+            )
+
+    def change_crosstransaction_r(self,identifier,r):
+
+        entry = self.get_crosstransaction_by_identifier(identifier)
+
+        with self.write_lock, self.conn:
+            self.conn.execute(
+                'INSERT OR REPLACE INTO crosstransaction_events('
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7], entry[8], r),
+            )

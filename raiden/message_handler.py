@@ -191,6 +191,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
+    raiden.wal.storage.change_crosstransaction_r(message.cross_id, locked_transfer_message.lock.secrethash.decode('utf-8'))
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 
@@ -204,11 +205,27 @@ def handle_message_crosssecretrequest(raiden, message):
     )
 
     secret_request_message.signature = message.secret_request_signature
-    print('befor handle message_secretrequest')
-    handle_message_secretrequest(raiden, secret_request_message)
-    print('after handle message_secretrequest')
 
-    
+    state_change = ReceiveSecretRequest(
+        secret_request_message.payment_identifier,
+        secret_request_message.amount,
+        secret_request_message.secrethash,
+        secret_request_message.sender,
+    )
+
+    state_change_id = raiden.wal.storage.write_state_change(state_change)
+    print('state_change_id', state_change_id)
+    print('write state change to db', state_change)
+
+
+    raiden.wal.storage.change_crosstransaction_statechangeid(message.cross_id, state_change_id)
+
+
+    # print('befor handle message_secretrequest')
+    # handle_message_secretrequest(raiden, secret_request_message)
+    # print('after handle message_secretrequest')
+
+
 
 
 
