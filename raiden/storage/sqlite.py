@@ -292,10 +292,8 @@ class SQLiteStorage:
             'SELECT * FROM crosstransaction_events WHERE identifier = ?', (identifier,),
         )
 
-        res = list(cursor.fetchall()[0])
-        res[1] = to_normalized_address(res[1])
-        res[2] = to_normalized_address(res[2])
-        res[3] = to_normalized_address(res[3])
+        res = cursor.fetchall(s)
+
 
 
         return res
