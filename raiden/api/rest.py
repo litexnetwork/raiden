@@ -913,7 +913,9 @@ class RestAPI:
             identifier = create_default_identifier()
         print(token_address)
         cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
-
+        return api_response(
+            result=cross_result
+        )
 
 
     #demo

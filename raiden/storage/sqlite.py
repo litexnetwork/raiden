@@ -1,5 +1,8 @@
 import sqlite3
 import threading
+
+from eth_utils import to_normalized_address
+
 from raiden.utils import sha3
 from raiden.exceptions import InvalidDBData
 from raiden.storage.utils import DB_SCRIPT_CREATE_TABLES
@@ -273,9 +276,12 @@ class SQLiteStorage:
         cursor.execute(
             'SELECT * FROM crosstransaction_events',
         )
-
-        for entry in cursor.fetchall():
-            print(entry)
+        res_all = list()
+        for res in cursor.fetchall():
+            res[1] = to_normalized_address(res[1])
+            res[2] = to_normalized_address(res[2])
+            res[3] = to_normalized_address(res[3])
+            res_all.append(res)
 
 
     def get_crosstransaction_by_identifier(self,identifier):
@@ -286,6 +292,9 @@ class SQLiteStorage:
         )
 
         res = cursor.fetchall()[0]
+        res[1] = to_normalized_address(res[1])
+        res[2] = to_normalized_address(res[2])
+        res[3] = to_normalized_address(res[3])
 
 
         return res
