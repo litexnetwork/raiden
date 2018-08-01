@@ -1488,7 +1488,8 @@ class CrossLockedTransfer(LockedTransfer):
             locked_transfer.fee)
 
         self.cross_id = cross_id
-        self.loked_transfer_signature = locked_transfer.signature
+        if hasattr(locked_transfer, 'signature'):
+            self.locked_transfer_signature = locked_transfer.signature
 
     @classmethod
     def unpack(cls, packed):
@@ -1517,6 +1518,7 @@ class CrossLockedTransfer(LockedTransfer):
         )
 
         cross_locked_transfer = cls(locked_transfer=locked_transfer, cross_id=packed.cross_id)
+        cross_locked_transfer.locked_transfer_signature = packed.locked_transfer_signature
 
         cross_locked_transfer.signature = packed.signature
         return cross_locked_transfer
@@ -1537,6 +1539,7 @@ class CrossLockedTransfer(LockedTransfer):
         packed.initiator = self.initiator
         packed.fee = self.fee
         packed.cross_id = self.cross_id
+        packed.locked_transfer_signature = self.locked_transfer_signature
 
         lock = self.lock
         packed.amount = lock.amount
@@ -1565,6 +1568,7 @@ class CrossLockedTransfer(LockedTransfer):
             'initiator': to_normalized_address(self.initiator),
             'fee': self.fee,
             'cross_id': self.cross_id,
+            'locked_transfer_signature': encode_hex(self.locked_transfer_signature),
             'signature': encode_hex(self.signature),
         }
 
@@ -1590,6 +1594,7 @@ class CrossLockedTransfer(LockedTransfer):
         )
         cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'])
 
+        cross_message.locked_transfer_signature = decode_hex(data['locked_transfer_signature'])
         cross_message.signature = decode_hex(data['signature'])
         return cross_message
 
