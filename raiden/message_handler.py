@@ -1,7 +1,7 @@
 import structlog
 import random
 
-from eth_utils import to_normalized_address
+from eth_utils import to_normalized_address, encode_hex
 
 from raiden.raiden_service import RaidenService
 from raiden.utils import random_secret
@@ -191,7 +191,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
-    raiden.wal.storage.change_crosstransaction_r(message.cross_id, str(locked_transfer_message.lock.secrethash,encoding='utf-8'))
+    raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash))
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 

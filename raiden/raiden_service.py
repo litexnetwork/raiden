@@ -9,7 +9,7 @@ import gevent
 from gevent.event import AsyncResult, Event
 from coincurve import PrivateKey
 import structlog
-from eth_utils import is_binary_address, to_normalized_address
+from eth_utils import is_binary_address, to_normalized_address, encode_hex
 
 from raiden.network.blockchain_service import BlockChainService
 from raiden.network.proxies import (
@@ -686,7 +686,7 @@ class RaidenService:
                 print("lock:::::",locked_transfer_message.lock.secrethash)
 
 
-                self.wal.storage.change_crosstransaction_r(cross_id, str(locked_transfer_message.lock.secrethash,encoding='utf-8'))
+                self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash))
 
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')
