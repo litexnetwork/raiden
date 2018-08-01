@@ -24,7 +24,9 @@ from raiden.messages import (
     SecretRequest,
     Crosstransaction,
     AcceptCross,
-CrossLockedTransfer)
+    CrossLockedTransfer,
+    CrossSecretRequest,
+)
 from raiden.transfer.mediated_transfer.state import lockedtransfersigned_from_message
 from raiden.transfer.mediated_transfer.state_change import (
     ReceiveSecretRequest,
@@ -183,11 +185,30 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
     )
     #locked_transfer_message.sender = message.sender
     locked_transfer_message.signature = message.locked_transfer_signature
-    handle_message_lockedtransfer(raiden, locked_transfer_message)
+    if message.target == raiden.address:
+        raiden.cross_handle_recieved_locked_transfer(locked_transfer_message, message.cross_id)
+    else:
+        handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
+
+
+def handle_message_crosssecretrequest(raiden, message):
+    secret_request_message = SecretRequest(
+        message.message_identifier,
+        message.payment_identifier,
+        message.secrethash,
+        message.amount
+    )
+
+    secret_request_message.signature = message.secret_request_signature
+    print('befor handle message_secretrequest')
+    handle_message_secretrequest(raiden, secret_request_message)
+    print('after handle message_secretrequest')
+
+    
 
 
 
@@ -215,6 +236,9 @@ def on_message(raiden: RaidenService, message: Message):
     elif type(message) == CrossLockedTransfer:
         print('handle is ok')
         handle_message_crosslockedtransfer(raiden, message)
+    elif type(message) == CrossSecretRequest:
+        print('recieve cross secret request')
+        handle_message_crosssecretrequest(raiden, message)
     else:
         log.error('Unknown message cmdid {}'.format(message.cmdid))
         return False

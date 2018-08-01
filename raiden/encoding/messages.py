@@ -26,6 +26,7 @@ DELIVERED = 12
 CROSSTRANSACTION = 13
 ACCEPTCROSS = 14
 CROSSLOCKEDTRANSFER = 15
+CROSSSECRETREQUEST = 16
 
 
 # pylint: disable=invalid-name
@@ -71,6 +72,7 @@ identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
 cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',1,'1s', integer(0, UINT256_MAX))
 locked_transfer_signature = make_field('locked_transfer_signature', 65, '65s')
+secret_request_signature = make_field('secret_request_signature', 65, '65s')
 
 
 CrossLockedTransfer = namedbuffer(
@@ -182,6 +184,24 @@ SecretRequest = namedbuffer(
         signature,
     ],
 )
+
+
+#demo
+CrossSecretRequest = namedbuffer(
+    'cross_secret_request',
+    [
+        cmdid(CROSSSECRETREQUEST),
+        pad(3),
+        message_identifier,
+        payment_identifier,
+        secrethash,
+        amount,
+        signature,
+        cross_id,
+        secret_request_signature,
+    ],
+)
+
 
 Secret = namedbuffer(
     'secret',

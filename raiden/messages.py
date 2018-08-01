@@ -677,6 +677,70 @@ class SecretRequest(SignedMessage):
         secret_request.signature = decode_hex(data['signature'])
         return secret_request
 
+#demo
+class CrossSecretRequest(SignedMessage):
+    cmdid = messages.CROSSSECRETREQUEST
+
+    def __init__(self, secret_request, cross_id):
+        super().__init__()
+        self.message_identifier = secret_request.message_identifier
+        self.payment_identifier = secret_request.payment_identifier
+        self.secrethash = secret_request.secrethash
+        self.amount = secret_request.amount
+        self.cross_id = cross_id
+
+        if hasattr(secret_request, 'signature'):
+            self.secret_request_signature = secret_request.signature
+
+    @classmethod
+    def unpack(cls, packed):
+        secret_request = SecretRequest(
+            message_identifier=packed.message_identifier,
+            payment_identifier=packed.payment_identifier,
+            secrethash=packed.secrethash,
+            amount=packed.amount,
+        )
+        cross_secret_request = cls(secret_request, packed.cross_id)
+
+        cross_secret_request.signature = packed.signature
+        cross_secret_request.secret_request_signature = packed.secret_request_signature
+        return cross_secret_request
+
+    def pack(self, packed):
+        packed.message_identifier = self.message_identifier
+        packed.payment_identifier = self.payment_identifier
+        packed.secrethash = self.secrethash
+        packed.amount = self.amount
+        packed.signature = self.signature
+        packed.cross_id = self.cross_id
+        packed.secret_request_signature = self.secret_request_signature
+
+    def to_dict(self):
+        return {
+            'type': self.__class__.__name__,
+            'message_identifier': self.message_identifier,
+            'payment_identifier': self.payment_identifier,
+            'secrethash': encode_hex(self.secrethash),
+            'amount': self.amount,
+            'signature': encode_hex(self.signature),
+            'secret_request_signature': encode_hex(self.secret_request_signature),
+            'cross_id': self.cross_id,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        assert data['type'] == cls.__name__
+        secret_request = SecretRequest(
+            message_identifier=data['message_identifier'],
+            payment_identifier=data['payment_identifier'],
+            secrethash=decode_hex(data['secrethash']),
+            amount=data['amount'],
+        )
+        cross_secret_request = cls(secret_request, data['cross_id'])
+        cross_secret_request.signature = decode_hex(data['signature'])
+        cross_secret_request.secret_request_signature = decode_hex(data['secret_request_signature'])
+        return cross_secret_request
+
 
 class Secret(EnvelopeMessage):
     """ Message used to do state changes on a partner Raiden Channel.
@@ -1719,6 +1783,7 @@ CMDID_TO_CLASS = {
     messages.CROSSTRANSACTION:Crosstransaction,
     messages.ACCEPTCROSS:AcceptCross,
     messages.CROSSLOCKEDTRANSFER: CrossLockedTransfer,
+    messages.CROSSSECRETREQUEST: CrossSecretRequest,
 }
 
 CLASSNAME_TO_CLASS = {klass.__name__: klass for klass in CMDID_TO_CLASS.values()}
