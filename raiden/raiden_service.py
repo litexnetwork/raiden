@@ -611,7 +611,7 @@ class RaidenService:
             identifier):
         self.transport.start_health_check(target_address)
         cross_id = create_default_crossid()
-        self.wal.create_crosstransactiontry(to_normalized_address(initiator_address), to_normalized_address(target_address), to_normalized_address(token_network_identifier), sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
+        self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
         print("write data to sqlite")
         print(self.wal.get_crosstransaction_by_identifier(cross_id))
         crosstransaction_message = Crosstransaction(random.randint(0, UINT64_MAX),initiator_address,target_address, token_network_identifier, sendETH_amount,sendBTC_amount,receiveBTC_address, cross_id)
