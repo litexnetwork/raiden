@@ -329,6 +329,7 @@ CMDID_MESSAGE = {
     CROSSTRANSACTION:Crosstransaction,
     ACCEPTCROSS:AcceptCross,
     CROSSLOCKEDTRANSFER:CrossLockedTransfer,
+    CROSSSECRETREQUEST:CrossSecretRequest,
 }
 
 
