@@ -47,7 +47,7 @@ from raiden.transfer.mediated_transfer.state_change import (
     ActionInitTarget,
 )
 from raiden.exceptions import InvalidAddress, RaidenShuttingDown
-from raiden.messages import (LockedTransfer, SignedMessage,Crosstransaction, CrossLockedTransfer)
+from raiden.messages import (LockedTransfer, SignedMessage,Crosstransaction, CrossLockedTransfer, CrossSecretRequest)
 from raiden.connection_manager import ConnectionManager
 from raiden.utils import (
     pex,
@@ -64,6 +64,7 @@ from raiden.transfer.mediated_transfer.events import (
 from raiden.messages import message_from_sendevent
 from raiden.transfer.mediated_transfer.events import (
     SendLockedTransfer,
+    SendSecretRequest,
 )
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
@@ -681,4 +682,33 @@ class RaidenService:
 
             on_raiden_event(self, event)
 
+    def cross_handle_recieved_locked_transfer(self, transfer, cross_id):
+        self.start_health_check_for(transfer.initiator)
+        state_change = target_init(transfer)
 
+        block_number = self.get_block_number()
+
+        event_list = self.wal.log_and_dispatch(state_change, block_number)
+
+        for event in event_list:
+            log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
+
+            if type(event) == SendSecretRequest:
+                secret_request_message = message_from_sendevent(event, self.address)
+                self.sign(secret_request_message)
+
+                cross_secret_request_message = CrossSecretRequest(secret_request_message, cross_id)
+                self.sign(cross_secret_request_message)
+
+                self.transport.send_async(
+                    event.recipient,
+                    event.queue_name,
+                    cross_secret_request_message,
+                )
+
+
+
+
+            on_raiden_event(self, event)
+
+        return event_list
