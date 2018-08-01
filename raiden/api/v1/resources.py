@@ -225,13 +225,16 @@ class CrossTransactionTry(BaseResource):
 
 
 ###demo
+
 class GetCrossTransaction(BaseResource):
 
+    def get(self):
+        return self.rest_api.get_crosstransaction_all()
 
-    print('get ok')
-    get_schema = EventRequestSchema()
-    print(get_schema)
+class GetCrossTransactionById(BaseResource):
 
-    @use_kwargs(get_schema, locations=('query',))
+
     def get(self,cross_id):
+
+        print(cross_id)
         return self.rest_api.get_crosstransaction(cross_id)

@@ -62,7 +62,7 @@ from raiden.api.v1.resources import (
     ConnectionsResource,
     ConnectionsInfoResource,
     CrossTransactionTry,
-    GetCrossTransaction)
+    GetCrossTransaction, GetCrossTransactionById)
 from raiden.transfer import channel, views
 from raiden.transfer.state import (
     CHANNEL_STATE_OPENED,
@@ -114,7 +114,9 @@ URLS_V1 = [
 
 ###sqlite_demo
     ('/crosstransactiontry/<hexaddress:token_address>/<hexaddress:target_address>',CrossTransactionTry),
-    ('/crosstransaction/cross_id',GetCrossTransaction)
+    ('/crosstransactiontry',GetCrossTransaction),
+    ('/crosstransactiontry/<string:cross_id>', GetCrossTransactionById),
+
 
 ]
 
@@ -919,5 +921,10 @@ class RestAPI:
         result = self.raiden_api.get_crosstransaction_by_id(cross_id)
 
         return  api_response(
+            result=result
+        )
+    def get_crosstransaction_all(self):
+        result = self.raiden_api.get_crosstransaction_all()
+        return api_response(
             result=result
         )

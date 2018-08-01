@@ -746,6 +746,10 @@ class RaidenAPI:
     def get_crosstransaction_by_id(self,cross_id):
         return self.raiden.get_crosstransaction_by_crossid(cross_id)
 
+
+
+    def get_crosstransaction_all(self):
+        return self.raiden.get_crosstransaction_all()
     transfer = transfer_and_wait
 
 
