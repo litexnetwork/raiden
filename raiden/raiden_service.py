@@ -687,6 +687,7 @@ class RaidenService:
                 print('after change r')
                # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
 
+
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')
                 self.sign(cross_transfer_message)
