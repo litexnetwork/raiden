@@ -283,6 +283,7 @@ class SQLiteStorage:
             res[2] = to_normalized_address(res[2])
             res[3] = to_normalized_address(res[3])
             res_all.append(res)
+        return  res_all
 
 
     def get_crosstransaction_by_identifier(self,identifier):
@@ -292,7 +293,7 @@ class SQLiteStorage:
             'SELECT * FROM crosstransaction_events WHERE identifier = ?', (identifier,),
         )
 
-        res = cursor.fetchall(s)
+        res = cursor.fetchall()[0]
 
 
 
