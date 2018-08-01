@@ -196,9 +196,9 @@ CrossSecretRequest = namedbuffer(
         payment_identifier,
         secrethash,
         amount,
-        signature,
         cross_id,
         secret_request_signature,
+        signature,
     ],
 )
 
