@@ -278,6 +278,7 @@ class SQLiteStorage:
         )
         res_all = list()
         for res in cursor.fetchall():
+            res = list(res)
             res[1] = to_normalized_address(res[1])
             res[2] = to_normalized_address(res[2])
             res[3] = to_normalized_address(res[3])
@@ -291,7 +292,7 @@ class SQLiteStorage:
             'SELECT * FROM crosstransaction_events WHERE identifier = ?', (identifier,),
         )
 
-        res = cursor.fetchall()[0]
+        res = list(cursor.fetchall()[0])
         res[1] = to_normalized_address(res[1])
         res[2] = to_normalized_address(res[2])
         res[3] = to_normalized_address(res[3])
