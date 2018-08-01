@@ -682,7 +682,11 @@ class RaidenService:
                 locked_transfer_message = message_from_sendevent(event, self.address)
                 self.sign(locked_transfer_message)
                 print("loked_tr_mess", locked_transfer_message.to_dict())
-                self.wal.storage.change_crosstransaction_r(cross_id, locked_transfer_message.lock.secrethash.decode('utf-8'))
+
+                print("lock:::::",locked_transfer_message.lock.secrethash)
+
+
+                self.wal.storage.change_crosstransaction_r(cross_id, str(locked_transfer_message.lock.secrethash,encoding='utf-8'))
 
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')

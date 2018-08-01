@@ -191,7 +191,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
-    raiden.wal.storage.change_crosstransaction_r(message.cross_id, locked_transfer_message.lock.secrethash.decode('utf-8'))
+    raiden.wal.storage.change_crosstransaction_r(message.cross_id, str(locked_transfer_message.lock.secrethash,encoding='utf-8'))
     print("get data from database")
     print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 
