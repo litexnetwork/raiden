@@ -238,3 +238,10 @@ class GetCrossTransactionById(BaseResource):
 
         print(cross_id)
         return self.rest_api.get_crosstransaction(cross_id)
+
+class ReciveHashResource(BaseResource):
+
+    def get(self,hash_r):
+        print(hash_r)
+
+        return 'ok'
