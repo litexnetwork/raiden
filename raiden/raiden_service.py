@@ -665,6 +665,7 @@ class RaidenService:
 
             if type(event) == SendLockedTransfer:
                 locked_transfer_message = message_from_sendevent(event, self.address)
+                self.sign(locked_transfer_message)
                 print("loked_tr_mess", locked_transfer_message.to_dict())
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')

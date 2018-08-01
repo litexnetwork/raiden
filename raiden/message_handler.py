@@ -182,7 +182,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         message.fee
     )
     #locked_transfer_message.sender = message.sender
-    locked_transfer_message.signature = message.signature
+    locked_transfer_message.signature = message.locked_transfer_signature
     handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)

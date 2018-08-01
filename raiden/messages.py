@@ -1488,6 +1488,7 @@ class CrossLockedTransfer(LockedTransfer):
             locked_transfer.fee)
 
         self.cross_id = cross_id
+        self.loked_transfer_signature = locked_transfer.signature
 
     @classmethod
     def unpack(cls, packed):

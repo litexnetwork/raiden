@@ -70,6 +70,7 @@ receiveBTC_address = make_field('receiveBTC_address',34,'34s')
 identifier = make_field('identifier',32,'32s', integer(0, UINT256_MAX))
 cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',1,'1s', integer(0, UINT256_MAX))
+locked_transfer_signature = make_field('locked_transfer_signature', 65, '65s')
 
 
 CrossLockedTransfer = namedbuffer(
@@ -94,6 +95,7 @@ CrossLockedTransfer = namedbuffer(
         amount,
         fee,
         cross_id,
+        locked_transfer_signature,
         signature,
     ]
 )
