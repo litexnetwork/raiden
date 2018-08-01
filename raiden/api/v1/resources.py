@@ -222,3 +222,19 @@ class CrossTransactionTry(BaseResource):
             receiveBTC_address=receiveBTC_address,
             identifier=identifier
         )
+
+
+###demo
+
+class GetCrossTransaction(BaseResource):
+
+    def get(self):
+        return self.rest_api.get_crosstransaction_all()
+
+class GetCrossTransactionById(BaseResource):
+
+
+    def get(self,cross_id):
+
+        print(cross_id)
+        return self.rest_api.get_crosstransaction(cross_id)

@@ -654,6 +654,16 @@ class RaidenService:
         )
         print("xxjj", init_initiator_statechange)
         self.handle_cross_state_change(init_initiator_statechange, cross_id)
+    ###demo
+    def get_crosstransaction_by_crossid(self,cross_id):
+        return  self.wal.get_crosstransaction_by_identifier(cross_id)
+    def get_crosstransaction_all(self):
+        res = wal.get_all_crosstransaction()
+        res = list(res)
+        res[1] = to_normalized_address(res[1])
+        res[2] = to_normalized_address(res[2])
+        res[3] = to_normalized_address(res[3])
+        return  res
 
     def handle_cross_state_change(self, state_change, cross_id, block_number=None):
         if block_number is None:
