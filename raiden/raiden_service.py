@@ -66,6 +66,7 @@ from raiden.transfer.mediated_transfer.events import (
     SendLockedTransfer,
     SendSecretRequest,
 )
+from eth_utils import encode_hex
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -682,7 +683,9 @@ class RaidenService:
                 locked_transfer_message = message_from_sendevent(event, self.address)
                 self.sign(locked_transfer_message)
                 print("loked_tr_mess", locked_transfer_message.to_dict())
-                self.wal.storage.change_crosstransaction_r(cross_id, locked_transfer_message.lock.secrethash.decode('utf-8'))
+                self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash))
+                print('after change r')
+                print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')

@@ -38,6 +38,7 @@ from raiden.constants import (
     UINT256_MAX,
     UINT64_MAX,
 )
+from eth_utils import encode_hex
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -191,8 +192,8 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
     raiden.wal.change_crosstransaction_status(message.cross_id, 4)
-    raiden.wal.storage.change_crosstransaction_r(message.cross_id, locked_transfer_message.lock.secrethash.decode('utf-8'))
-    print("get data from database")
+    raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash))
+    print("get data from database aft change r")
     print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
 
 
