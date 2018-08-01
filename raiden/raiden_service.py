@@ -125,6 +125,7 @@ def mediator_init(raiden, transfer: LockedTransfer):
 
 
 def target_init(transfer: LockedTransfer):
+    print("target_init")
     from_transfer = lockedtransfersigned_from_message(transfer)
     from_route = RouteState(
         transfer.sender,
@@ -625,6 +626,7 @@ class RaidenService:
     # demo
     def start_send_crosstansfer(self, cross_id, identifier=None):
         cross_data = self.wal.get_crosstransaction_by_identifier(cross_id)
+        print(cross_data)
         amount = cross_data[4]
         target = cross_data[2]
 
