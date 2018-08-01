@@ -121,6 +121,7 @@ def handle_message_directtransfer(raiden: RaidenService, message: DirectTransfer
 
 def handle_message_lockedtransfer(raiden: RaidenService, message: LockedTransfer):
     if message.target == raiden.address:
+        print(message.to_dict())
         raiden.target_mediated_transfer(message)
     else:
         raiden.mediate_mediated_transfer(message)

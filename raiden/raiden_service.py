@@ -125,8 +125,8 @@ def mediator_init(raiden, transfer: LockedTransfer):
 
 
 def target_init(transfer: LockedTransfer):
-    print("target_init")
     from_transfer = lockedtransfersigned_from_message(transfer)
+    print(transfer.to_dict())
     from_route = RouteState(
         transfer.sender,
         from_transfer.balance_proof.channel_address,
