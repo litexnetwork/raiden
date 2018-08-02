@@ -828,104 +828,58 @@ class RestAPI:
 
         return result
 
-
-######sqlite_demo
-    def get_crosstransaction_list(self, registry_address, token_address=None, partner_address=None):
-        raiden_service_result = self.raiden_api.get_crosstransaction_list(
-            registry_address,
-            token_address,
-            partner_address,
-        )
-        assert isinstance(raiden_service_result, list)
-        result = [
-            self.crosstransaction_schema.dump(crosstransaction_schema).data
-            for crosstransaction_schema in raiden_service_result
-        ]
-        return api_response(result=result)
-
-    def put_crossstransactiontry(
-            self,
-            registry_address,
-            partner_address,
-            token_address,
-            settle_timeout=None,
-            reveal_timeout=None,
-            balance=None,
-    ):
-
-        try:
-            self.raiden_api.crosstransaction_try(
-                registry_address,
-                token_address,
-                partner_address,
-                settle_timeout,
-                reveal_timeout,
-            )
-        except (InvalidAddress, InvalidSettleTimeout, SamePeerAddress,
-                AddressWithoutCode, DuplicatedChannelError) as e:
-            return api_error(
-                errors=str(e),
-                status_code=HTTPStatus.CONFLICT,
-            )
-
-        if balance:
-            # make initial deposit
-            try:
-                self.raiden_api.set_total_channel_deposit(
-                    registry_address,
-                    token_address,
-                    partner_address,
-                    balance,
-                )
-            except EthNodeCommunicationError as e:
-                return api_error(
-                    errors=str(e),
-                    status_code=HTTPStatus.REQUEST_TIMEOUT,
-                )
-            except InsufficientFunds as e:
-                return api_error(
-                    errors=str(e),
-                    status_code=HTTPStatus.PAYMENT_REQUIRED,
-                )
-            except DepositOverLimit as e:
-                return api_error(
-                    errors=str(e),
-                    status_code=HTTPStatus.EXPECTATION_FAILED,
-                )
-
-        channel_state = views.get_channelstate_for(
-            views.state_from_raiden(self.raiden_api.raiden),
-            registry_address,
-            token_address,
-            partner_address,
-        )
-
-        result = self.crosstransaction_schema.dump(channel_state)
-
-        return api_response(
-            result=result.data,
-            status_code=HTTPStatus.CREATED,
-        )
-
     #demo
     def start_cross(self,registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
         if identifier is None:
             identifier = create_default_identifier()
         print(token_address)
-        cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
-        return api_response(
-            result=cross_result
-        )
-
+        self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+        cross_transfer = {
+            'initiator_address':initiator_address,
+            'target_address': target_address,
+            'token_address': token_address,
+            'sendETH_amount': sendETH_amount,
+            'sendBTC_amount': sendBTC_amount,
+            'receiveBTC_address': receiveBTC_address,
+            'identifier':identifier,
+        }
+        result = self.crosstransaction_schema.dump(cross_transfer)
+        return api_response(result=result.data)
 
     #demo
     def get_crosstransaction(self,cross_id):
+
         result = self.raiden_api.get_crosstransaction_by_id(cross_id)
 
-        return  result
+        crosstransaction = {
+            "crossid":result[0],
+            "initiator_address":result[1],
+            "target_address":result[2],
+            "token_network_identifier":result[3],
+            'sendETH_amount':result[4],
+            'sendBTC_amount':result[5],
+            'receiveBTC_address':result[6],
+            'status':result[7],
+        }
+        result = self.crosstransaction_sql_schema.dump(crosstransaction)
+        return api_response(result=result.data)
     def get_crosstransaction_all(self):
-        result = self.raiden_api.get_crosstransaction_all()
-        return  result
+        res = self.raiden_api.get_crosstransaction_all()
+        crosstransaction_all = list(dict())
+        for result in res:
+            crosstransaction = {
+                "crossid": result[0],
+                "initiator_address": result[1],
+                "target_address": result[2],
+                "token_network_identifier": result[3],
+                'sendETH_amount': result[4],
+                'sendBTC_amount': result[5],
+                'receiveBTC_address': result[6],
+                'status': result[7],
+            }
+            crosstransaction_all.append(crosstransaction)
+        result = self.crosstransaction_sql_schema.dump(crosstransaction)
+        return api_response(result=result.data)
 
     def get_state_change_by_r(self,hash_r):
         self.raiden_api.get_state_change_by_r(hash_r)

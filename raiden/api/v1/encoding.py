@@ -333,26 +333,28 @@ class ConnectionsLeaveSchema(BaseSchema):
 ####sqlite_demo
 
 class CrossTransactionSchema(BaseSchema):
-    channel_identifier = KeccakField(attribute='identifier')
-    token_network_identifier = AddressField()
-    token_address = AddressField()
-    partner_address = fields.Method('get_partner_address')
-    settle_timeout = fields.Integer()
-    reveal_timeout = fields.Integer()
-    balance = fields.Method('get_balance')
-    state = fields.Method('get_state')
+    initiator_address = AddressField(missing=None)
+    target_address = AddressField(missing=None)
+    token_address = AddressField(missing=None)
+    sendETH_amount = fields.Integer(required=True)
+    sendBTC_amount = fields.Float(required=True)
+    receiveBTC_address = fields.String(required=True)
+    identifier = fields.Integer(missing=None)
 
-    def get_partner_address(self, channel_state):  # pylint: disable=no-self-use
-        return to_checksum_address(channel_state.partner_state.address)
+    class Meta:
+        strict = True
+        decoding_class = dict
 
-    def get_balance(self, channel_state):  # pylint: disable=no-self-use
-        return channel.get_balance(
-            channel_state.our_state,
-            channel_state.partner_state,
-        )
 
-    def get_state(self, channel_state):
-        return channel.get_status(channel_state)
+class crosstransaction_sql_schema():
+    initiator_address = AddressField(missing=None)
+    target_address = AddressField(missing=None)
+    token_address = AddressField(missing=None)
+    sendETH_amount = fields.Integer(required=True)
+    sendBTC_amount = fields.Float(required=True)
+    receiveBTC_address = fields.String(required=True)
+    crossid = fields.Integer(missing=None)
+    status = fields.Integer(missing=None)
 
     class Meta:
         strict = True
