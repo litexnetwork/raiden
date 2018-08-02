@@ -739,7 +739,7 @@ class RaidenAPI:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier,
         )
-        return async_result
+        return async_result.wait(timeout=None)
 
 
     #demo

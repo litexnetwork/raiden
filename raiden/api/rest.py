@@ -912,7 +912,17 @@ class RestAPI:
         if identifier is None:
             identifier = create_default_identifier()
         print(token_address)
-        cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+
+        try:
+            cross_result = self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+        except Exception as e:
+            return api_error(
+                errors="cross err:"+str(e),
+                status_code=HTTPStatus.CONFLICT,
+            )
+
+
+
         return api_response(
             result=cross_result
         )
