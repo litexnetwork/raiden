@@ -346,7 +346,7 @@ class CrossTransactionSchema(BaseSchema):
         decoding_class = dict
 
 
-class crosstransaction_sql_schema():
+class Crosstransaction_sql_schema(BaseSchema):
     initiator_address = AddressField(missing=None)
     target_address = AddressField(missing=None)
     token_address = AddressField(missing=None)

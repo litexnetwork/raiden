@@ -46,7 +46,7 @@ from raiden.api.v1.encoding import (
     TransferSchema,
     InvalidEndpoint,
     CrossTransactionSchema,
-)
+    Crosstransaction_sql_schema)
 from raiden.api.v1.resources import (
     create_blueprint,
     AddressResource,
@@ -352,6 +352,7 @@ class RestAPI:
         self.transfer_schema = TransferSchema()
         #####sqlite_demo
         self.crosstransaction_schema = CrossTransactionSchema()
+        self.crosstransaction_sql_schema = Crosstransaction_sql_schema()
 
     def get_our_address(self):
         return api_response(
