@@ -260,19 +260,6 @@ class MatrixTransport:
         if isinstance(message, Processed):
             async_result.set(True)  # processed messages shouldn't get a Delivered reply
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
-        elif isinstance(message,Crosstransaction):
-            async_result.set(True)  # processed messages shouldn't get a Delivered reply
-            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
-        elif isinstance(message,CrossSecretRequest):
-            async_result.set(True)  # processed messages shouldn't get a Delivered reply
-            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
-        elif isinstance(message,CrossLockedTransfer):
-            async_result.set(True)  # processed messages shouldn't get a Delivered reply
-            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
-        elif isinstance(message, AcceptCross):
-            async_result.set(True)  # processed messages shouldn't get a Delivered reply
-            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
-
         else:
             self._messageids_to_asyncresult[message_id] = async_result
             self._send_with_retry(receiver_address, async_result, json.dumps(message.to_dict()))
