@@ -728,13 +728,8 @@ class RaidenService:
                     event.queue_name,
                     cross_secret_request_message,
                 )
-<<<<<<< HEAD
-
-                continue
-=======
                 continue
 
->>>>>>> a4d379a0b742254953042e84ac843818a4f85cfa
 
 
             on_raiden_event(self, event)
