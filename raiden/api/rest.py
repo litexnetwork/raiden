@@ -872,7 +872,9 @@ class RestAPI:
         result = self.crosstransaction_sql_schema.dump(crosstransaction)
         return api_response(result=result.data)
     def get_crosstransaction_all(self):
+
         res = self.raiden_api.get_crosstransaction_all()
+        print(res)
         crosstransaction_all = list(dict())
         for result in res:
             crosstransaction = {
@@ -886,8 +888,9 @@ class RestAPI:
                 'status': result[7],
             }
             crosstransaction_all.append(crosstransaction)
-        result = self.crosstransaction_sql_schema.dump(crosstransaction)
-        return api_response(result=result.data)
+        print(crosstransaction_all)
+        #result = self.crosstransaction_sql_schema.dump(crosstransaction_all)
+        return api_response(result=crosstransaction_all)
 
     def get_state_change_by_r(self,hash_r):
         self.raiden_api.get_state_change_by_r(hash_r)
