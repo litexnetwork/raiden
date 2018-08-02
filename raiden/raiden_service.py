@@ -685,7 +685,8 @@ class RaidenService:
                 print("loked_tr_mess", locked_transfer_message.to_dict())
                 self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash))
                 print('after change r')
-                #print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
+               # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
+
 
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
                 print('cross_message ok')
@@ -727,8 +728,13 @@ class RaidenService:
                     event.queue_name,
                     cross_secret_request_message,
                 )
+<<<<<<< HEAD
 
                 continue
+=======
+                continue
+
+>>>>>>> a4d379a0b742254953042e84ac843818a4f85cfa
 
 
             on_raiden_event(self, event)

@@ -44,6 +44,8 @@ from raiden.messages import (
     Message,
     Processed,
     Crosstransaction,
+    CrossLockedTransfer,
+    CrossSecretRequest,
 AcceptCross)
 from raiden.network.transport.udp import udp_utils
 from raiden.network.utils import get_http_rtt
@@ -259,6 +261,12 @@ class MatrixTransport:
             async_result.set(True)  # processed messages shouldn't get a Delivered reply
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
         elif isinstance(message,Crosstransaction):
+            async_result.set(True)  # processed messages shouldn't get a Delivered reply
+            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
+        elif isinstance(message,CrossSecretRequest):
+            async_result.set(True)  # processed messages shouldn't get a Delivered reply
+            self._send_immediate(receiver_address, json.dumps(message.to_dict()))
+        elif isinstance(message,CrossLockedTransfer):
             async_result.set(True)  # processed messages shouldn't get a Delivered reply
             self._send_immediate(receiver_address, json.dumps(message.to_dict()))
         elif isinstance(message, AcceptCross):
