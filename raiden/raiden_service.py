@@ -647,13 +647,11 @@ class RaidenService:
         token_network_identifier = cross_data[3]
 
         self.transport.start_health_check(target)
-        if identifier is None:
-            identifier = create_default_identifier()
 
         secret = random_secret()
         init_initiator_statechange = initiator_init(
             self,
-            identifier,
+            cross_id,
             amount,
             secret,
             token_network_identifier,
