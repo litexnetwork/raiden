@@ -19,6 +19,10 @@ from raiden.transfer.state_change import (
 )
 from raiden.utils import sha3
 
+from raiden.utils import (
+    create_default_identifier,
+)
+
 
 def state_transition_noop(state, state_change):  # pylint: disable=unused-argument
     return TransitionResult(state, list())
@@ -194,17 +198,18 @@ def test_wal():
 
     state_manager = StateManager(state_transition_noop, state)
     ###storage = SQLiteStorage('/home/wk/work/Raiden/test.txt', serializer)
-    storage = SQLiteStorage('/home/wk/work/Raiden/test.txt', serializer)
-    wal = CrossTransaction(state_manager, storage)
+    storage = SQLiteStorage('/Users/vincent/Downloads/test.txt', serializer)
+    wal = WriteAheadLog(state_manager, storage)
     return wal
 
-def test_create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address):
-    wal = test_wal()
-    wal.create_crosstransactiontry(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address)
+def test_create_crosstransactiontry(initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address):
+    wal = new_wal()
+    id = create_default_identifier()
+    wal.create_crosstransactiontry(initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, id)
 
 def get_all_crosstransaction():
-    wal = test_wal()
-    wal.get_all_crosstransaction()
+    wal = new_wal()
+    print(wal.get_all_crosstransaction())
 
 def get_crosstransaction_by_identifier(identifier):
     wal = test_wal()
@@ -220,6 +225,6 @@ get_all_crosstransaction()
 
 ###change_crosstransaction_status("0xe5c165a44a7a82afab71ff3cf7e3a2c58e155347",6)
 
-###test_create_crosstransactiontry("0xb626843871F547f097d2185342fCbB6f7a28e160","0xb626843871F547f097d2185342fCbB6f7a28e160",200,100,"0xb626843871F547f097d2185342fCbB6f7a28e160")
+#test_create_crosstransactiontry("0xb626843871F547f097d2185342fCbB6f7a28e160","0xb626843871F547f097d2185342fCbB6f7a28e160","0xb626843871F547f097d2185342fCbB6f7a28e160",200,100,"0xb626843871F547f097d2185342fCbB6f7a28e160")
 
 

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS state_events (
 
 DB_CREATE_CROSSTRANSACTION_EVENTS = '''
 CREATE TABLE IF NOT EXISTS crosstransaction_events (
-    identifier VARCHAR PRIMARY KEY, 
+    identifier INTEGER PRIMARY KEY, 
     initiator_address VARCHAR, 
     target_address VARCHAR, 
     token_address VARCHAR, 
