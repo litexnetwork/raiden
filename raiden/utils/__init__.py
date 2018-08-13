@@ -295,7 +295,7 @@ def create_default_identifier():
 
 def create_default_crossid():
     """ Generates a random identifier. """
-    return random.randint(0, 100000)
+    return random.randint(0, 9000000000000000000)
 def merge_dict(a: dict, b: dict, path=None) -> dict:
     """ merges b into a """
     if path is None:
@@ -311,3 +311,4 @@ def merge_dict(a: dict, b: dict, path=None) -> dict:
         else:
             a[key] = b[key]
     return a
+

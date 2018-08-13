@@ -612,7 +612,7 @@ class RaidenService:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
  
-        identifier = create_default_identifier()
+        identifier = create_default_crossid()
         async_result = AsyncResult()
         self.identifier_to_results[identifier].append(async_result)
 

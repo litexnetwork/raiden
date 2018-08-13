@@ -21,6 +21,7 @@ from raiden.utils import sha3
 
 from raiden.utils import (
     create_default_identifier,
+    create_default_crossid
 )
 
 
@@ -219,7 +220,16 @@ def change_crosstransaction_status(identifier,status):
     wal = test_wal()
     wal.change_crosstransaction_status(identifier,status)
 
-get_all_crosstransaction()
+def test_crosstransaction():
+    wal = new_wal()
+    for i in range(100000):
+        id = create_default_crossid()
+        wal.create_crosstransactiontry("0xb626843871F547f097d2185342fCbB6f7a28e160", "0xb626843871F547f097d2185342fCbB6f7a28e160", "0xb626843871F547f097d2185342fCbB6f7a28e160", 100, 100, "0xb626843871F547f097d2185342fCbB6f7a28e160", id)
+        id_new = wal.get_crosstransaction_by_identifier(id)[0]
+        assert id == id_new
+
+
+#get_all_crosstransaction()
 
 ###get_crosstransaction_by_identifier("0xe5c165a44a7a82afab71ff3cf7e3a2c58e155347")
 
