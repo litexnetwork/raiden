@@ -857,7 +857,101 @@ def test_api_transfers(api_backend, raiden_network, token_addresses):
     assert_proper_response(response)
     response = response.json()
     assert response == transfer
+#demo
+@pytest.mark.parametrize('number_of_nodes', [2])
+def test_api_crosstransactiontry(api_backend, raiden_network, token_addresses):
+    _, app1 = raiden_network
+    sendETH_amount = 101
+    sendBTC_amount =2
+    receiveBTC_address = "1JnC15WwDVcC3QbQRUY6ChqRLucLpTGaJN"
+    token_address = token_addresses[0]
+    target_address = app1.raiden.address
 
+    api_server, _ = api_backend
+    our_address = api_server.rest_api.raiden_api.address
+
+    crosstransaction = {
+        'initiator_address': to_checksum_address(our_address),
+        'target_address': to_checksum_address(target_address),
+        'token_address': to_checksum_address(token_address),
+        'sendETH_amount': sendETH_amount,
+        'sendBTC_amount': sendBTC_amount,
+        'receiveBTC_address':receiveBTC_address,
+    }
+
+    request = grequests.post(
+        api_url_for(
+            api_backend,
+            'CrossTransactionTry',
+            token_address=to_checksum_address(token_address),
+            target_address=to_checksum_address(target_address),
+        ),
+        json={'initiator_address':  to_checksum_address(our_address), 'sendETH_amount': sendETH_amount,'sendBTC_amount':sendBTC_amount,'receiveBTC_address':receiveBTC_address},
+    )
+
+
+    response = request.send().response
+    assert_proper_response(response)
+    response = response.json()
+    assert response == crosstransaction
+
+
+
+#demo
+@pytest.mark.parametrize('number_of_nodes', [2])
+def test_api_getcrosstransation(api_backend, raiden_network, token_addresses):
+    _, app1 = raiden_network
+    api_server, _ = api_backend
+
+    request = grequests.get(
+        api_url_for(
+            api_backend,
+            'GetCrossTransaction'
+        )
+    )
+
+    response = request.send().response
+    assert_proper_response(response, HTTPStatus.OK)
+    assert response.json() == []
+    #test getcrosstransation_by_id
+    cross_id = response.json()[0]['crossid']
+    test_api_getcrosstransation_by_id(api_backend,raiden_network,token_addresses,cross_id)
+
+
+def test_api_getcrosstransation_by_id(api_backend, raiden_network, token_addresses,cross_id):
+    _, app1 = raiden_network
+    api_server, _ = api_backend
+    cross_id = cross_id
+
+    request = grequests.get(
+        api_url_for(
+            api_backend,
+            'GetCrossTransactionById',
+            cross_id = cross_id,
+        )
+    )
+
+    response = request.send().response
+    assert_proper_response(response, HTTPStatus.OK)
+    assert response.json() == []
+
+#demo
+@pytest.mark.parametrize('number_of_nodes', [2])
+def test_api_crosstransation_hash(api_backend, raiden_network, token_addresses,hash_r):
+    _, app1 = raiden_network
+    api_server, _ = api_backend
+    hash_r = hash_r
+    request = grequests.get(
+        api_url_for(
+            api_backend,
+            'ReciveHashResource',
+            hash_r=hash_r
+        )
+    )
+
+    response = request.send().response
+    assert_proper_response(response, HTTPStatus.OK)
+    assert response.json() == []
 
 @pytest.mark.parametrize('number_of_tokens', [0])
 @pytest.mark.parametrize('number_of_nodes', [1])
