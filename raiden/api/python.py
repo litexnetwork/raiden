@@ -739,7 +739,8 @@ class RaidenAPI:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier,
         )
-        return async_result.wait(timeout=None)
+        #test
+        #return async_result.wait(timeout=None)
 
 
     #demo
@@ -754,10 +755,15 @@ class RaidenAPI:
 
 
     def get_state_change_by_r(self, r):
-        state_change_id = self.raiden.wal.storage.get_crosstransaction_by_r(r)[8]
-        state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
-        print("get state change from db", state_change)
-        self.raiden.handle_state_change(state_change)
+        try:
+            state_change_id = self.raiden.wal.storage.get_crosstransaction_by_r(r)[8]
+            state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
+            print("get state change from db", state_change)
+            self.raiden.handle_state_change(state_change)
+            return  "hash_r is ok"
+        except :
+            return "hash_r is error"
+
 
 
 
