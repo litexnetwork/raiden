@@ -638,7 +638,7 @@ class RaidenService:
         amount = cross_data[4]
         target = cross_data[2]
 
-        payment_network_identifier = self.default_registry.address
+        #payment_network_identifier = self.default_registry.address
         # token_network_identifier = views.get_token_network_identifier_by_token_address(
         #     views.state_from_raiden(self),
         #     payment_network_identifier,
