@@ -830,7 +830,7 @@ class RestAPI:
         return result
 
     #demo
-    def start_cross(self,registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
+    def start_cross(self,registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier=None):
         if identifier is None:
             identifier = create_default_identifier()
         print(token_address)
@@ -848,7 +848,6 @@ class RestAPI:
             'sendETH_amount': sendETH_amount,
             'sendBTC_amount': sendBTC_amount,
             'receiveBTC_address': receiveBTC_address,
-            'identifier':identifier,
         }
         result = self.crosstransaction_schema.dump(cross_transfer)
         return api_response(result=result.data)
@@ -894,5 +893,4 @@ class RestAPI:
         return api_response(result=crosstransaction_all)
 
     def get_state_change_by_r(self,hash_r):
-        self.raiden_api.get_state_change_by_r(hash_r)
-        return "hash_r is ok"
+        return self.raiden_api.get_state_change_by_r(hash_r)
