@@ -193,7 +193,7 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash), "")
         print("get data from database aft change r")
         print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
-        print("get lnd_string is %",(message.lnd_string))
+        print("get lnd_string is %",(message.lnd_string.decode()))
 
         #to do send lnd string to lnd
 
