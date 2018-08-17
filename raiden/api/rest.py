@@ -871,6 +871,7 @@ class RestAPI:
         }
         result = self.crosstransaction_sql_schema.dump(crosstransaction)
         return api_response(result=result.data)
+        
     def get_crosstransaction_all(self):
 
         res = self.raiden_api.get_crosstransaction_all()

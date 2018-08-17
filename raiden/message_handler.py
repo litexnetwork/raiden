@@ -188,13 +188,19 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
     locked_transfer_message.signature = message.locked_transfer_signature
     if message.target == raiden.address:
         raiden.cross_handle_recieved_locked_transfer(locked_transfer_message, message.cross_id)
+
+        raiden.wal.change_crosstransaction_status(message.cross_id, 4)
+        raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash), "")
+        print("get data from database aft change r")
+        print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
+
+        #to do send lnd string to lnd
+
+
     else:
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
-    raiden.wal.change_crosstransaction_status(message.cross_id, 4)
-    raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash))
-    print("get data from database aft change r")
-    print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
+    
 
 
 def handle_message_crosssecretrequest(raiden, message):

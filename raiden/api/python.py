@@ -750,11 +750,13 @@ class RaidenAPI:
 
     def get_crosstransaction_all(self):
         return self.raiden.get_crosstransaction_all()
+
     transfer = transfer_and_wait
 
 
     def get_state_change_by_r(self, r):
-        state_change_id = self.raiden.wal.storage.get_crosstransaction_by_r(r)[8]
+        row = self.raiden.wal.storage.get_crosstransaction_by_r(r)
+        state_change_id = row[8]
         state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
         print("get state change from db", state_change)
         self.raiden.handle_state_change(state_change)

@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS crosstransaction_events (
     receiveBTC_address VARCHAR, 
     status INTEGER NOT NULL,
     state_change_id INTEGER,
-    hash_r VARCHAR
+    hash_r VARCHAR,
+    r VARCHAR
 );
 '''
 

@@ -649,6 +649,7 @@ class RaidenService:
         self.transport.start_health_check(target)
 
         secret = random_secret()
+
         init_initiator_statechange = initiator_init(
             self,
             cross_id,
@@ -658,7 +659,10 @@ class RaidenService:
             target,
         )
         print("xxjj", init_initiator_statechange)
-        self.handle_cross_state_change(init_initiator_statechange, cross_id)
+        self.handle_cross_state_change(init_initiator_statechange, cross_id, secret)
+
+
+
     ###demo
     def get_crosstransaction_by_crossid(self,cross_id):
         res= self.wal.get_crosstransaction_by_identifier(cross_id)
@@ -674,11 +678,16 @@ class RaidenService:
 
         return  res
 
-    def handle_cross_state_change(self, state_change, cross_id, block_number=None):
+    def handle_cross_state_change(self, state_change, cross_id, secret, block_number=None):
         if block_number is None:
             block_number = self.get_block_number()
 
         event_list = self.wal.log_and_dispatch(state_change, block_number)
+
+          # to do lnd string
+
+
+          
 
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
@@ -687,7 +696,7 @@ class RaidenService:
                 locked_transfer_message = message_from_sendevent(event, self.address)
                 self.sign(locked_transfer_message)
                 print("loked_tr_mess", locked_transfer_message.to_dict())
-                self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash))
+                self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash), secret)
                 print('after change r')
                # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
 
