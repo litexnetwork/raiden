@@ -324,7 +324,7 @@ class SQLiteStorage:
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT OR REPLACE INTO crosstransaction_events('
-                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r,r'
                 ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], status, entry[8], entry[9], entry[10]),
             )
@@ -353,7 +353,7 @@ class SQLiteStorage:
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT OR REPLACE INTO crosstransaction_events('
-                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r,r'
                 ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7], id, entry[9], entry[10]),
             )
@@ -365,7 +365,7 @@ class SQLiteStorage:
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT OR REPLACE INTO crosstransaction_events('
-                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r'
+                '    identifier,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r,r'
                 ') VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7], entry[8], r_hash, r),
             )
