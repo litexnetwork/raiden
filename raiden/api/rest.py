@@ -834,9 +834,14 @@ class RestAPI:
         if identifier is None:
             identifier = create_default_identifier()
         print(token_address)
+        self.raiden_api.crosstransaction_async(registry_address, token_address, target_address, initiator_address,
+                                               sendETH_amount, sendBTC_amount, receiveBTC_address, identifier)
         try:
-            self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
+
+            pass
+            #self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,identifier)
         except Exception as e:
+            print(str(e))
             return api_error(
                 errors="cross err:" + str(e),
                 status_code=HTTPStatus.CONFLICT,
@@ -870,7 +875,7 @@ class RestAPI:
         }
         result = self.crosstransaction_sql_schema.dump(crosstransaction)
         return api_response(result=result.data)
-        
+
     def get_crosstransaction_all(self):
 
         res = self.raiden_api.get_crosstransaction_all()

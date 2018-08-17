@@ -740,7 +740,7 @@ class RaidenAPI:
             identifier,
         )
         #test
-        #return async_result.wait(timeout=None)
+        return async_result.wait(timeout=None)
 
 
     #demo

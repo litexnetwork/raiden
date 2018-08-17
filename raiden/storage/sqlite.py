@@ -279,7 +279,7 @@ class SQLiteStorage:
         ####ConnectionsInfoResource
         with self.write_lock, self.conn:
             self.conn.execute(
-                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r,r) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, 0, "", ""),
             )
 
