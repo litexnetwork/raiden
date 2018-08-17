@@ -73,6 +73,7 @@ cross_id = make_field('cross_id',32,'32s', integer(0, UINT256_MAX))
 accept = make_field('accept',1,'1s', integer(0, UINT256_MAX))
 locked_transfer_signature = make_field('locked_transfer_signature', 65, '65s')
 secret_request_signature = make_field('secret_request_signature', 65, '65s')
+lnd_string = make_field('lnd_string',200,'200s')
 
 
 CrossLockedTransfer = namedbuffer(
@@ -97,6 +98,7 @@ CrossLockedTransfer = namedbuffer(
         amount,
         fee,
         cross_id,
+        lnd_string,
         locked_transfer_signature,
         signature,
     ]

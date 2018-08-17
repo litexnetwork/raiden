@@ -611,12 +611,12 @@ class RaidenService:
     def start_crosstransaction(self,token_network_identifier,
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,
             identifier):
- 
+
         identifier = create_default_crossid()
         async_result = AsyncResult()
         self.identifier_to_results[identifier].append(async_result)
 
-        
+
         self.transport.start_health_check(target_address)
         cross_id = identifier
         self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
@@ -687,7 +687,7 @@ class RaidenService:
           # to do lnd string
 
 
-          
+
 
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
@@ -701,7 +701,8 @@ class RaidenService:
                # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
 
 
-                cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id)
+                lnd_string = "hello world this is lnd_string"
+                cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id,lnd_string)
                 print('cross_message ok')
                 self.sign(cross_transfer_message)
                 print('corss_message sign ok')

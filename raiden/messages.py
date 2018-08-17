@@ -1533,7 +1533,7 @@ class CrossLockedTransfer(LockedTransfer):
 
     cmdid = messages.CROSSLOCKEDTRANSFER
 
-    def __init__(self, locked_transfer, cross_id):
+    def __init__(self, locked_transfer, cross_id,lnd_string):
         super().__init__(
             locked_transfer.chain_id,
             locked_transfer.message_identifier,
@@ -1552,6 +1552,7 @@ class CrossLockedTransfer(LockedTransfer):
             locked_transfer.fee)
 
         self.cross_id = cross_id
+        self.lnd_string = lnd_string
         if hasattr(locked_transfer, 'signature'):
             self.locked_transfer_signature = locked_transfer.signature
 
@@ -1581,7 +1582,7 @@ class CrossLockedTransfer(LockedTransfer):
             fee=packed.fee,
         )
 
-        cross_locked_transfer = cls(locked_transfer=locked_transfer, cross_id=packed.cross_id)
+        cross_locked_transfer = cls(locked_transfer=locked_transfer, cross_id=packed.cross_id,lnd_string=packed.lnd_string)
         cross_locked_transfer.locked_transfer_signature = packed.locked_transfer_signature
 
         cross_locked_transfer.signature = packed.signature
@@ -1603,6 +1604,7 @@ class CrossLockedTransfer(LockedTransfer):
         packed.initiator = self.initiator
         packed.fee = self.fee
         packed.cross_id = self.cross_id
+        packed.lnd_string = self.lnd_string
         packed.locked_transfer_signature = self.locked_transfer_signature
 
         lock = self.lock
@@ -1632,6 +1634,7 @@ class CrossLockedTransfer(LockedTransfer):
             'initiator': to_normalized_address(self.initiator),
             'fee': self.fee,
             'cross_id': self.cross_id,
+            'lnd_string':self.lnd_string,
             'locked_transfer_signature': encode_hex(self.locked_transfer_signature),
             'signature': encode_hex(self.signature),
         }
@@ -1656,7 +1659,7 @@ class CrossLockedTransfer(LockedTransfer):
             initiator=to_canonical_address(data['initiator']),
             fee=data['fee']
         )
-        cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'])
+        cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'],lnd_string=data['lnc_string'])
 
         cross_message.locked_transfer_signature = decode_hex(data['locked_transfer_signature'])
         cross_message.signature = decode_hex(data['signature'])
