@@ -1634,7 +1634,7 @@ class CrossLockedTransfer(LockedTransfer):
             'initiator': to_normalized_address(self.initiator),
             'fee': self.fee,
             'cross_id': self.cross_id,
-            'lnd_string':self.lnd_string.encode(),
+            'lnd_string':self.lnd_string.decode(),
             'locked_transfer_signature': encode_hex(self.locked_transfer_signature),
             'signature': encode_hex(self.signature),
         }
@@ -1659,7 +1659,7 @@ class CrossLockedTransfer(LockedTransfer):
             initiator=to_canonical_address(data['initiator']),
             fee=data['fee']
         )
-        cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'],lnd_string=bytes(data['lnc_string'],'utf-8'))
+        cross_message = cls(locked_transfer=locked_message, cross_id=data['cross_id'],lnd_string=bytes(data['lnd_string'],'utf-8'))
 
         cross_message.locked_transfer_signature = decode_hex(data['locked_transfer_signature'])
         cross_message.signature = decode_hex(data['signature'])
