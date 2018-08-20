@@ -74,6 +74,7 @@ accept = make_field('accept',1,'1s', integer(0, UINT256_MAX))
 locked_transfer_signature = make_field('locked_transfer_signature', 65, '65s')
 secret_request_signature = make_field('secret_request_signature', 65, '65s')
 lnd_string = make_field('lnd_string',200,'200s')
+cross_type = make_field('cross_type',1,'1s',integer(0, UINT64_MAX))
 
 
 CrossLockedTransfer = namedbuffer(
@@ -127,6 +128,7 @@ Crosstransaction = namedbuffer(
         sendETH_amount,
         sendBTC_amount,
         receiveBTC_address,
+        cross_type,
         identifier,
         signature
     ]

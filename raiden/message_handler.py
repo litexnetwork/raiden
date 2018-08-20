@@ -137,23 +137,28 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
 def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
     print("recive crosstransaction")
 
-    raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
-    print("get data from database")
-    print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
+    cross_type = message.cross_type
+    if cross_type==1:
+        raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
+        print("get data from database")
+        print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
 
-    accept=1
-    acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
-    print("creat accept ok")
-    raiden.sign(acceptcross)
-    print("creat sign ok")
-    print(to_normalized_address(message.initiator_address))
-    raiden.transport.send_async(
-        message.initiator_address,
-        bytes("123", 'utf-8'),
-        acceptcross,
-    )
-    print((acceptcross.to_dict()))
-    print("send accept ok")
+        accept=1
+        acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
+        print("creat accept ok")
+        raiden.sign(acceptcross)
+        print("creat sign ok")
+        print(to_normalized_address(message.initiator_address))
+        raiden.transport.send_async(
+            message.initiator_address,
+            bytes("123", 'utf-8'),
+            acceptcross,
+        )
+        print((acceptcross.to_dict()))
+        print("send accept ok")
+    else:
+        message.cross_type = 1
+        raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.cross_type,message.identifier)
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):

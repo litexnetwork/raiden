@@ -462,7 +462,7 @@ class Crosstransaction(SignedMessage):
 
     cmdid = messages.CROSSTRANSACTION
 
-    def __init__(self, message_identifier: MessageID,initiator_address,target_address, token_network_identifier,  sendETH_amount,sendBTC_amount,receiveBTC_address,identifier):
+    def __init__(self, message_identifier: MessageID,initiator_address,target_address, token_network_identifier,  sendETH_amount,sendBTC_amount,receiveBTC_address,cross_type,identifier):
         super().__init__()
         self.message_identifier = message_identifier
         self.initiator_address = initiator_address
@@ -471,6 +471,7 @@ class Crosstransaction(SignedMessage):
         self.sendETH_amount = sendETH_amount
         self.sendBTC_amount = sendBTC_amount
         self.receiveBTC_address = receiveBTC_address
+        self.cross_type = cross_type
         self.identifier = identifier
 
     @classmethod
@@ -482,6 +483,7 @@ class Crosstransaction(SignedMessage):
                                sendETH_amount = packed.sendETH_amount,
                                sendBTC_amount = packed.sendBTC_amount,
                                receiveBTC_address = packed.receiveBTC_address,
+                               cross_type= packed.cross_type,
                                identifier = packed.identifier)
         crosstransaction.signature = packed.signature
         return  crosstransaction
@@ -494,6 +496,7 @@ class Crosstransaction(SignedMessage):
         packed.sendETH_amount = self.sendETH_amount
         packed.sendBTC_amount = self.sendBTC_amount
         packed.receiveBTC_address = self.receiveBTC_address
+        packed.cross_type= self.cross_type
         packed.identifier = self.identifier
         packed.signature = self.signature
 
@@ -515,6 +518,7 @@ class Crosstransaction(SignedMessage):
             'sendETH_amount':self.sendETH_amount,
             'sendBTC_amount':self.sendBTC_amount,
             'receiveBTC_address':(self.receiveBTC_address),
+            'cross_type':self.cross_type,
             'identifier':self.identifier,
             'signature' :encode_hex(self.signature),
         }
@@ -529,6 +533,7 @@ class Crosstransaction(SignedMessage):
             sendETH_amount = data['sendETH_amount'],
             sendBTC_amount = data['sendBTC_amount'],
             receiveBTC_address = (data['receiveBTC_address']),
+            cross_type = data['cross_type'],
             identifier = data['identifier']
         )
         message.signature = decode_hex(data['signature'])
