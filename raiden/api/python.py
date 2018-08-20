@@ -1,5 +1,6 @@
 from contextlib import ExitStack
 
+import  json
 import gevent
 import structlog
 from eth_utils import is_binary_address, to_checksum_address
@@ -761,9 +762,9 @@ class RaidenAPI:
             state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
             print("get state change from db", state_change)
             self.raiden.handle_state_change(state_change)
-            return  "hash_r is ok"
+            return  {"success":True,"reason":"null"}
         except :
-            return "hash_r is error"
+            return  {"sucess":False,"reason":"hash_r is error"}
 
 
 
