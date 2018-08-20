@@ -618,7 +618,7 @@ class RaidenService:
 
         self.transport.start_health_check(target_address)
         cross_id = identifier
-        if(type==1):
+        if(cross_type==1):
             self.wal.create_crosstransactiontry(initiator_address, target_address, token_network_identifier, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_id)
             print("write data to sqlite")
             print(self.wal.get_crosstransaction_by_identifier(cross_id))

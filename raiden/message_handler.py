@@ -158,7 +158,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
         print("send accept ok")
     else:
         message.cross_type = 1
-        raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.cross_type,message.identifier)
+        raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.receiveBTC_address,message.cross_type,message.identifier)
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
