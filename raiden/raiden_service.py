@@ -701,7 +701,7 @@ class RaidenService:
                # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
 
 
-                lnd_string = bytes("hello world this is lnd_string","utf-8s")
+                lnd_string = bytes("hello world this is lnd_string","utf-8")
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id,lnd_string)
                 print('cross_message ok')
                 self.sign(cross_transfer_message)
