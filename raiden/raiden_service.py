@@ -689,8 +689,10 @@ class RaidenService:
           # to do lnd string
         with open('/usr/local/admin.macaroon.hex', 'rb') as f:
             fb = f.read()
+        macaroon = fb.decode('utf-8')
+        print("macaroon: ", macaroon)
         lnd_url = "https://localhost:8001/v1/invoices"
-        lnd_headers = {'Grpc-Metadata-macaroon':fb.decode('utf-8')}
+        lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         lnd_r = base64.b64encode(secret)
         print("lnd_r:", lnd_r)
         lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8')}
@@ -773,8 +775,9 @@ class RaidenService:
     def send_payment_request(self, lnd_string):
         with open('/usr/local/admin.macaroon.hex', 'rb') as f:
             fb = f.read()
+        macaroon = fb.decode('utf-8')
         lnd_url = "https://localhost:8001/v1/channels/transactions"
-        lnd_headers = {'Grpc-Metadata-macaroon':fb.decode('utf-8')}
+        lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         data = {'payment_request':lnd_string}
         print("before send payment request to lnd")
         res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(data), verify=False)
