@@ -690,6 +690,7 @@ class RaidenService:
         with open('/usr/local/admin.macaroon.hex', 'rb') as f:
             fb = f.read()
         macaroon = fb.decode('utf-8')
+        macaroon = macaroon[:-1]
         print("macaroon: ", macaroon)
         lnd_url = "https://localhost:8001/v1/invoices"
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
@@ -776,6 +777,7 @@ class RaidenService:
         with open('/usr/local/admin.macaroon.hex', 'rb') as f:
             fb = f.read()
         macaroon = fb.decode('utf-8')
+        macaroon = macaroon[:-1]
         lnd_url = "https://localhost:8001/v1/channels/transactions"
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         data = {'payment_request':lnd_string}
