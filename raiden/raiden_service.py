@@ -687,18 +687,20 @@ class RaidenService:
         event_list = self.wal.log_and_dispatch(state_change, block_number)
 
           # to do lnd string
-        lnd_url = "https://13.115.246.211:8001/v1/invoices"
-        lnd_headers = {'Grpc-Metadata-macaroon':'0201036C6E6402BB01030A100F258D58ED580A552242B48F7687E3C81201301A160A0761646472657373120472656164120577726974651A130A04696E666F120472656164120577726974651A170A08696E766F69636573120472656164120577726974651A160A076D657373616765120472656164120577726974651A170A086F6666636861696E120472656164120577726974651A160A076F6E636861696E120472656164120577726974651A140A057065657273120472656164120577726974650000062086EF60CFA4CC3446B87E72CA71EA04B24774EF96DCAC8B68B16111A03ACAF021'}
-        lnd_r = base64.b64encode(secret)
-        print("lnd_r:", lnd_r)
-        lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8')}
+        # lnd_url = "https://13.115.246.211:8001/v1/invoices"
+        # lnd_headers = {'Grpc-Metadata-macaroon':'0201036C6E6402BB01030A100F258D58ED580A552242B48F7687E3C81201301A160A0761646472657373120472656164120577726974651A130A04696E666F120472656164120577726974651A170A08696E766F69636573120472656164120577726974651A160A076D657373616765120472656164120577726974651A170A086F6666636861696E120472656164120577726974651A160A076F6E636861696E120472656164120577726974651A140A057065657273120472656164120577726974650000062086EF60CFA4CC3446B87E72CA71EA04B24774EF96DCAC8B68B16111A03ACAF021'}
+        # lnd_r = base64.b64encode(secret)
+        # print("lnd_r:", lnd_r)
+        # lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8')}
 
-        res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(lnd_data), verify=False)
+        # res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(lnd_data), verify=False)
 
-        res_json = res.json()
-        lnd_r_hash = res_json['r_hash']
-        lnd_payment_request = res_json['payment_request']
+        # res_json = res.json()
+        # lnd_r_hash = res_json['r_hash']
+        # lnd_payment_request = res_json['payment_request']
 
+        lnd_r_hash = "example"
+        lnd_payment_request = "example"
 
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
@@ -710,15 +712,15 @@ class RaidenService:
                 self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash), lnd_r_hash)
                 print('after change r')
                # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
-                print('recieve from lnd:', lnd_r_hash, '/n', lnd_payment_request)
-                tmp_r_hash = base64.b64decode(lnd_r_hash)
-                raiden_r_hash = locked_transfer_message.lock.secrethash
-                hex_r_hash = encode_hex(tmp_r_hash)
-                print('raiden r hash:', encode_hex(raiden_r_hash))
-                print('lnd r hash after decode:', hex_r_hash)
+                # print('recieve from lnd:', lnd_r_hash, '/n', lnd_payment_request)
+                # tmp_r_hash = base64.b64decode(lnd_r_hash)
+                # raiden_r_hash = locked_transfer_message.lock.secrethash
+                # hex_r_hash = encode_hex(tmp_r_hash)
+                # print('raiden r hash:', encode_hex(raiden_r_hash))
+                # print('lnd r hash after decode:', hex_r_hash)
                 lnd_string = bytes(lnd_payment_request, "utf-8")
                 #lnd_string = bytes("hello world this is lnd_string","utf-8")
-                cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id,lnd_string)
+                cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id, lnd_string)
                 print('cross_message ok')
                 self.sign(cross_transfer_message)
                 print('corss_message sign ok')
