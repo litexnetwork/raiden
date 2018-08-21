@@ -158,10 +158,37 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
         print("send accept ok")
     else:
         message.cross_type = 1
-        raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.receiveBTC_address,message.cross_type,message.identifier)
+        async_result = raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.receiveBTC_address,message.cross_type,message.identifier)
+        async_result.wait(timeout=None)
+
+        accept=8
+        acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
+    
+        raiden.sign(acceptcross)
+        print("async result done, send message to A")
+        print(to_normalized_address(message.initiator_address))
+        raiden.transport.send_async(
+            message.initiator_address,
+            bytes("123", 'utf-8'),
+            acceptcross,
+        )
+        
+    
+
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
+
+    # for async
+    if message.accept == 8:
+
+        for result in raiden.identifier_to_results[message.identifier]:
+            result.set(True)
+
+        del raiden.identifier_to_results[message.identifier]
+        print("recieve async message")
+        return
+
     print("recive acceptcross")
     print("message's accept is %s",(message.accept))
     raiden.wal.change_crosstransaction_status(message.identifier, 3)
