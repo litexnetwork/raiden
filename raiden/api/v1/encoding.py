@@ -340,6 +340,7 @@ class CrossTransactionSchema(BaseSchema):
     sendBTC_amount = fields.Float(required=True)
     receiveBTC_address = fields.String(required=True)
     identifier = fields.Integer(missing=None)
+    cross_type = fields.Integer(missing=None)
 
     class Meta:
         strict = True
