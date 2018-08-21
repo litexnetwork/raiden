@@ -201,6 +201,9 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
         print("get lnd_string is %",(message.lnd_string.decode()))
 
         #to do send lnd string to lnd
+        lnd_string = message.lnd_string.decode('utf-8')
+        #raiden.send_payment_request(lnd_string)
+
 
 
     else:
