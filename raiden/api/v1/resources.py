@@ -223,6 +223,15 @@ class CrossTransactionTry(BaseResource):
             cross_type= cross_type,
         )
 
+class CrossTransactionHash(BaseResource):
+    post_schema = TransferSchema(
+        only=('hash_r'),
+    )
+
+    @use_kwargs(post_schema, locations=('json',))
+    def post(self, hash_r):
+        return self.rest_api.get_state_change_by_r(hash_r)
+
 
 ###demo
 

@@ -62,7 +62,7 @@ from raiden.api.v1.resources import (
     ConnectionsResource,
     ConnectionsInfoResource,
     CrossTransactionTry,
-    GetCrossTransaction, GetCrossTransactionById, ReciveHashResource)
+    GetCrossTransaction, GetCrossTransactionById, ReciveHashResource, CrossTransactionHash)
 from raiden.transfer import channel, views
 from raiden.transfer.state import (
     CHANNEL_STATE_OPENED,
@@ -117,6 +117,7 @@ URLS_V1 = [
     ('/crosstransactiontry',GetCrossTransaction),
     ('/crosstransactiontry/<string:cross_id>', GetCrossTransactionById),
     ('/crosstransactiontry_hash/<string:hash_r>', ReciveHashResource),
+    ('/crosstransaction/r', CrossTransactionHash),
 
 ]
 
