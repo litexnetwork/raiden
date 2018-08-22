@@ -117,7 +117,7 @@ URLS_V1 = [
     ('/crosstransactiontry',GetCrossTransaction),
     ('/crosstransactiontry/<string:cross_id>', GetCrossTransactionById),
     ('/crosstransactiontry_hash/<string:hash_r>', ReciveHashResource),
-    ('/crosstransactionr/', CrossTransactionHash),
+    ('/crosstransactionr', CrossTransactionHash),
 
 ]
 
