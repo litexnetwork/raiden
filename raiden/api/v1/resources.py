@@ -231,7 +231,7 @@ class CrossTransactionHash(BaseResource):
 
     @use_kwargs(post_schema, locations=('json',))
     def post(self, hashr):
-        return self.rest_api.get_state_change_by_r(hashr)
+        return self.rest_api.get_state_change_by_r(hashr=hashr)
 
 
 ###demo

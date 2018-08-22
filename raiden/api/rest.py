@@ -907,5 +907,5 @@ class RestAPI:
         #result = self.crosstransaction_sql_schema.dump(crosstransaction_all)
         return api_response(result=crosstransaction_all)
 
-    def get_state_change_by_r(self,hash_r):
-        return self.raiden_api.get_state_change_by_r(hash_r)
+    def get_state_change_by_r(self,hashr):
+        return self.raiden_api.get_state_change_by_r(hashr)
