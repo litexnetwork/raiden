@@ -227,7 +227,7 @@ class CrossTransactionTry(BaseResource):
 class CrossTransactionHash(BaseResource):
 
     post_schema = CrossTransactionHashSchema(
-        only=('hashr'),
+        only=('hashr',),
     )
 
     @use_kwargs(post_schema, locations=('json',))
