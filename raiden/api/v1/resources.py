@@ -226,7 +226,7 @@ class CrossTransactionTry(BaseResource):
 
 class CrossTransactionHash(BaseResource):
 
-    post_schema = TransferSchema(
+    post_schema = CrossTransactionHashSchema(
         only=('hashr'),
     )
 
