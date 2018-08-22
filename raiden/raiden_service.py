@@ -696,7 +696,7 @@ class RaidenService:
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         lnd_r = base64.b64encode(secret)
         print("lnd_r:", lnd_r)
-        lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8')}
+        lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8'), 'type':"CROSS_CHAIN_INVOICE"}
 
         res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(lnd_data), verify=False)
 
