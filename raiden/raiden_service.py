@@ -703,6 +703,9 @@ class RaidenService:
         res_json = res.json()
         lnd_r_hash = res_json['r_hash']
         lnd_payment_request = res_json['payment_request']
+        print('get lnd_r_hash^^^^^^^^^^^^^^^^^^^^:', lnd_r_hash)
+
+
 
         # lnd_r_hash = "example"
         # lnd_payment_request = "example"

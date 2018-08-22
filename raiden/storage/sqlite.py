@@ -336,7 +336,7 @@ class SQLiteStorage:
         cursor = self.conn.cursor()
 
         cursor.execute(
-            'SELECT * FROM crosstransaction_events WHERE hash_r = ?', (hash_r,),
+            'SELECT * FROM crosstransaction_events WHERE r = ?', (hash_r,),
         )
 
         res = cursor.fetchall()[0]
