@@ -740,6 +740,9 @@ class RaidenAPI:
             target_address, initiator_address, sendETH_amount, sendBTC_amount, receiveBTC_address,cross_type,identifier,
         )
         #test
+        if cross_type == 0:
+            return async_result
+            
         return async_result.wait(timeout=None)
 
 

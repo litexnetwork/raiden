@@ -834,18 +834,6 @@ class RestAPI:
     def start_cross(self,registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,cross_type,identifier=None):
         if identifier is None:
             identifier = create_default_identifier()
-        if cross_type==0:
-            cross_transfer = {
-                'initiator_address': initiator_address,
-                'target_address': target_address,
-                'token_address': token_address,
-                'sendETH_amount': sendETH_amount,
-                'sendBTC_amount': sendBTC_amount,
-                'receiveBTC_address': receiveBTC_address,
-                'cross_type': cross_type,
-            }
-            result = self.crosstransaction_schema.dump(cross_transfer)
-            return api_response(result=result.data)
 
         try:
             self.raiden_api.crosstransaction_async(registry_address,token_address, target_address, initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,cross_type,identifier)
@@ -855,6 +843,7 @@ class RestAPI:
                 errors="cross err:" + str(e),
                 status_code=HTTPStatus.CONFLICT,
             )
+        
         cross_transfer = {
             'initiator_address':initiator_address,
             'target_address': target_address,
