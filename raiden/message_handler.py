@@ -258,12 +258,14 @@ def handle_message_crosssecretrequest(raiden, message):
         secret_request_message.sender,
     )
 
-    state_change_id = raiden.wal.storage.write_state_change(state_change)
-    print('state_change_id', state_change_id)
-    print('write state change to db', state_change)
-
-
-    raiden.wal.storage.change_crosstransaction_statechangeid(message.cross_id, state_change_id)
+    row = raiden.wal.get_crosstransaction_by_identifier(message.cross_id)
+    if row[7] == 8:
+        raiden.handle_state_change(state_change)
+    else:
+        state_change_id = raiden.wal.storage.write_state_change(state_change)
+        print('state_change_id', state_change_id)
+        print('write state change to db', state_change)
+        raiden.wal.storage.change_crosstransaction_statechangeid(message.cross_id, state_change_id)
 
 
     # print('befor handle message_secretrequest')

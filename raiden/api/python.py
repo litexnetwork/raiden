@@ -742,7 +742,7 @@ class RaidenAPI:
         #test
         if cross_type == 0:
             return async_result
-            
+
         return async_result.wait(timeout=None)
 
 
@@ -762,10 +762,15 @@ class RaidenAPI:
         try:
             #todo
             print('recieve hash_R from lnd^^^^^^^^^^^^^^^:', r)
-            state_change_id = self.raiden.wal.storage.get_crosstransaction_by_r(r)[8]
-            state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
-            print("get state change from db", state_change)
-            self.raiden.handle_state_change(state_change)
+            row = self.raiden.wal.storage.get_crosstransaction_by_r(r)
+            state_change_id = row[8]
+            cross_id = row[0]
+            if state_change_id == 0:
+                self.raiden.wal.storage.change_crosstransaction_status(cross_id, 8)
+            else:
+                state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
+                print("get state change from db", state_change)
+                self.raiden.handle_state_change(state_change)
             return  {"success":True,"reason":"null"}
         except :
             return  {"sucess":False,"reason":"hash_r is error"}
