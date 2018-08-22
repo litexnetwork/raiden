@@ -360,3 +360,10 @@ class Crosstransaction_sql_schema(BaseSchema):
     class Meta:
         strict = True
         decoding_class = dict
+
+class CrossTransactionHashSchema(BaseSchema):
+    hashr = fields.String(required=True)
+
+    class Meta:
+        strict = True
+        decoding_class = dict

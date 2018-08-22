@@ -8,6 +8,7 @@ from raiden.api.v1.encoding import (
     TransferSchema,
     ConnectionsConnectSchema,
     ConnectionsLeaveSchema,
+    CrossTransactionHashSchema,
 )
 
 import structlog
@@ -224,7 +225,7 @@ class CrossTransactionTry(BaseResource):
         )
 
 class CrossTransactionHash(BaseResource):
-    post_schema = TransferSchema(
+    post_schema = CrossTransactionHashSchema(
         only=('hashr'),
     )
 
