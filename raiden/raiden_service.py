@@ -686,13 +686,17 @@ class RaidenService:
 
         event_list = self.wal.log_and_dispatch(state_change, block_number)
 
-          # to do lnd string
-        with open('/usr/local/admin.macaroon.hex', 'rb') as f:
-            fb = f.read()
-        macaroon = fb.decode('utf-8')
-        macaroon = macaroon[:-1]
+        row = self.wal.storage.get_lnd(1)
+        # macaroon_path = "/home/litexdev/lnd_nodes/node{}/admin.macaroon".format(node)
+
+        #   # to do lnd string
+        # with open(macaroon_path, 'rb') as f:
+        #     fb = f.read()
+        # macaroon = fb.decode('utf-8')
+        # macaroon = macaroon[:-1]
+        macaroon = row[4]
         print("macaroon: ", macaroon)
-        lnd_url = "https://localhost:8001/v1/invoices"
+        lnd_url = "https://localhost:{}/v1/invoices".format(row[1])
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         lnd_r = base64.b64encode(secret)
         print("lnd_r:", lnd_r)
@@ -777,11 +781,14 @@ class RaidenService:
         return event_list
 
     def send_payment_request(self, lnd_string):
-        with open('/usr/local/admin.macaroon.hex', 'rb') as f:
-            fb = f.read()
-        macaroon = fb.decode('utf-8')
-        macaroon = macaroon[:-1]
-        lnd_url = "https://localhost:8001/v1/channels/transactions"
+        row = self.wal.storage.get_lnd(1)
+        # macaroon_path = "/home/litexdev/lnd_nodes/node{}/admin.macaroon".format(node)
+        # with open(macaroon_path, 'rb') as f:
+        #     fb = f.read()
+        # macaroon = fb.decode('utf-8')
+        # macaroon = macaroon[:-1]
+        macaroon = row[4]
+        lnd_url = "https://localhost:{}/v1/channels/transactions".format(row[1])
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         data = {'payment_request':lnd_string}
         print("before send payment request to lnd")

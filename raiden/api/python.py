@@ -775,6 +775,22 @@ class RaidenAPI:
         except :
             return  {"sucess":False,"reason":"hash_r is error"}
 
+    def post_lnd(self, port, identity, address, macaroon):
+        try:
+            row = self.raiden.wal.storage.get_lnd(1)
+        except:
+            self.raiden.wal.storage.create_lnd(port, identity, address, macaroon)
+            return {"status":0}
+        else:
+            return {"status":1, "error":"already exists"}
+
+    def get_lnd(self):
+        try:
+            row = self.raiden.wal.storage.get_lnd(1)
+        except:
+            return {"status":1, "error":"not exists"}
+        else:
+            return {"status":0, "port":row[1], "identity":row[2], "address":row[3], "macaroon":row[4]}
 
 
 

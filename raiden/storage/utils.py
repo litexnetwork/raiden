@@ -47,10 +47,20 @@ CREATE TABLE IF NOT EXISTS crosstransaction_events (
 );
 '''
 
+DB_CREATE_LND = '''
+CREATE TABLE IF NOT EXISTS lnd (
+    identifier INTEGER PRIMARY KEY,
+    port VARCHAR,
+    identity VARCHAR,
+    address VARCHAR,
+    macaroon VARCHAR,
+);
+'''
+
 DB_SCRIPT_CREATE_TABLES = """
 PRAGMA foreign_keys=off;
 BEGIN TRANSACTION;
-{}{}{}{}{}
+{}{}{}{}{}{}
 COMMIT;
 PRAGMA foreign_keys=on;
 """.format(
@@ -59,4 +69,5 @@ PRAGMA foreign_keys=on;
     DB_CREATE_SNAPSHOT,
     DB_CREATE_STATE_EVENTS,
     DB_CREATE_CROSSTRANSACTION_EVENTS,
+    DB_CREATE_LND,
 )

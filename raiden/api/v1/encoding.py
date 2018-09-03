@@ -367,3 +367,13 @@ class CrossTransactionHashSchema(BaseSchema):
     class Meta:
         strict = True
         decoding_class = dict
+
+class CrossTransactionLndSchema(BaseSchema):
+    port = fields.String(required=True)
+    identity = fields.String(required=True)
+    address = fields.String(required=True)
+    macaroon = fields.String(required=True)
+
+    class Meta:
+        strict = True
+        decoding_class = dict

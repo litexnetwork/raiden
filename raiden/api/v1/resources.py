@@ -9,6 +9,7 @@ from raiden.api.v1.encoding import (
     ConnectionsConnectSchema,
     ConnectionsLeaveSchema,
     CrossTransactionHashSchema,
+    CrossTransactionLndSchema,
 )
 
 import structlog
@@ -234,6 +235,19 @@ class CrossTransactionHash(BaseResource):
     def post(self, hashr):
         return self.rest_api.state_change_by_r(hashr=hashr)
 
+class CrossTransactionLnd(BaseResource):
+
+    post_schema = CrossTransactionLndSchema(
+        only=('port', 'identity', 'address', 'macaroon'),
+    )
+
+    @use_kwargs(post_schema, locations=('json',))
+    def post(self, port, identity, address, macaroon):
+        return self.rest_api.post_lnd(port=port, identity=identity, address=address, macaroon=macaroon)
+
+    
+    def get(self,):
+        return self.rest_api.get_lnd()
 
 ###demo
 

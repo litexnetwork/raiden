@@ -286,6 +286,20 @@ class SQLiteStorage:
         print(identifier)
         return  identifier
 
+    def create_lnd(self, port, identity, address, macaroon):
+        with self.write_lock, self.conn:
+            self.conn.execute(
+                'INSERT INTO lnd(identifier, port, identity, address, macaroon) VALUES(?, ?, ?, ?, ?)',
+                (1, port, identity, address, macaroon),
+            )
+
+    def get_lnd(self, identifier):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            'SELECT * FROM lnd WHERE identifier = ?', (identifier,),
+        )
+        res = cursor.fetchall()[0]
+        return res 
 
     def get_all_crosstransaction(self):
         cursor = self.conn.cursor()

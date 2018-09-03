@@ -62,6 +62,7 @@ from raiden.api.v1.resources import (
     ConnectionsResource,
     ConnectionsInfoResource,
     CrossTransactionTry,
+    CrossTransactionLnd,
     GetCrossTransaction, GetCrossTransactionById, ReciveHashResource, CrossTransactionHash)
 from raiden.transfer import channel, views
 from raiden.transfer.state import (
@@ -118,7 +119,7 @@ URLS_V1 = [
     ('/crosstransactiontry/<string:cross_id>', GetCrossTransactionById),
     ('/crosstransactiontry_hash/<string:hash_r>', ReciveHashResource),
     ('/crosstransactionr', CrossTransactionHash),
-
+    ('/lnd', CrossTransactionLnd),
 ]
 
 
@@ -898,3 +899,9 @@ class RestAPI:
 
     def state_change_by_r(self,hashr):
         return self.raiden_api.get_state_change_by_r(hashr)
+
+    def post_lnd(self, port, identity, address, macaroon):
+        return self.raiden_api.post_lnd(port, identity, address, macaroon)
+
+    def get_lnd(self):
+        return self.raiden_api.get_lnd()
