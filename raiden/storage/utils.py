@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS lnd (
     port VARCHAR,
     identity VARCHAR,
     address VARCHAR,
-    macaroon VARCHAR,
+    macaroon VARCHAR
 );
 '''
 
