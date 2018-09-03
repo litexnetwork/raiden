@@ -851,7 +851,7 @@ class RestAPI:
             'token_address': token_address,
             'sendETH_amount': sendETH_amount,
             'sendBTC_amount': sendBTC_amount,
-            'receiveBTC_address': receiveBTC_address,
+           # 'receiveBTC_address': receiveBTC_address,
             'cross_type':cross_type,
         }
         result = self.crosstransaction_schema.dump(cross_transfer)
@@ -870,7 +870,7 @@ class RestAPI:
             "token_network_identifier":result[3],
             'sendETH_amount':result[4],
             'sendBTC_amount':result[5],
-            'receiveBTC_address':result[6],
+           # 'receiveBTC_address':result[6],
             'status':result[7],
         }
         result = self.crosstransaction_sql_schema.dump(crosstransaction)
@@ -889,7 +889,7 @@ class RestAPI:
                 "token_network_identifier": result[3],
                 'sendETH_amount': result[4],
                 'sendBTC_amount': result[5],
-                'receiveBTC_address': result[6],
+            #    'receiveBTC_address': result[6],
                 'status': result[7],
             }
             crosstransaction_all.append(crosstransaction)

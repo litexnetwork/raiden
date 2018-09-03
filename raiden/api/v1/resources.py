@@ -209,11 +209,11 @@ class ConnectionsInfoResource(BaseResource):
 
 class CrossTransactionTry(BaseResource):
     post_schema = TransferSchema(
-        only=('initiator_address', 'sendETH_amount', 'sendBTC_amount', 'receiveBTC_address','cross_type'),
+        only=('initiator_address', 'sendETH_amount', 'sendBTC_amount','cross_type'),
     )
 
     @use_kwargs(post_schema, locations=('json',))
-    def post(self, token_address, target_address,initiator_address, sendETH_amount,sendBTC_amount,receiveBTC_address,cross_type):
+    def post(self, token_address, target_address,initiator_address, sendETH_amount,sendBTC_amount,cross_type):
         return self.rest_api.start_cross(
             registry_address=self.rest_api.raiden_api.raiden.default_registry.address,
             token_address=token_address,
@@ -221,7 +221,7 @@ class CrossTransactionTry(BaseResource):
             initiator_address=initiator_address,
             sendETH_amount=sendETH_amount,
             sendBTC_amount=sendBTC_amount,
-            receiveBTC_address=receiveBTC_address,
+            receiveBTC_address="btcaddressnotused",
             cross_type= cross_type,
         )
 
