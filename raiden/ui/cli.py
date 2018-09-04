@@ -310,6 +310,13 @@ def options(func):
             show_default=True,
         ),
         option(
+            '--lnd-address',
+            help='binding lnd address',
+            default='localhost:8080',
+            type=str,
+            show_default=True,
+        ),
+        option(
             '--discovery-contract-address',
             help='hex encoded address of the discovery contract.',
             type=ADDRESS_TYPE,
@@ -516,6 +523,7 @@ def run_app(
         transport,
         matrix_server,
         network_id,
+        lnd_address,
         extra_config=None,
         **kwargs,
 ):
@@ -678,6 +686,8 @@ def run_app(
     try:
         chain_config = constants.ID_TO_NETWORK_CONFIG.get(net_id, {})
         start_block = chain_config.get(constants.START_QUERY_BLOCK_KEY, 0)
+        #vincent
+        config['lnd_address'] = lnd_address
         raiden_app = App(
             config=config,
             chain=blockchain_service,
