@@ -221,7 +221,7 @@ class CrossTransactionTry(BaseResource):
             initiator_address=initiator_address,
             sendETH_amount=sendETH_amount,
             sendBTC_amount=sendBTC_amount,
-            receiveBTC_address="btcaddressnotused",
+            receiveBTC_address="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
             cross_type= cross_type,
         )
 
