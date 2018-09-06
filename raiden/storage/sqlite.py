@@ -253,8 +253,6 @@ class SQLiteStorage:
     def __del__(self):
         self.conn.close()
 
-###################demo
-
     def get_cross_state_change_by_identifier(self,identifier):
         cursor = self.conn.cursor()
 
@@ -263,27 +261,16 @@ class SQLiteStorage:
         )
 
         entry = cursor.fetchall()[0]
-
         res = self.serializer.deserialize(entry[0])
-
-        #res = cursor.fetchall()[0]
-
-
-
         return res
 
     def create_crosstransaction(self, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status,identifier):
-        #identifier = encode_hex(privatekey_to_address(sha3(int(initiator_address,16) + int(target_address,16) + int(receiveBTC_address,16) + int(time.time()))))
-
-        ###initiator_address = self.rest_api.raiden_api.raiden.default_registry.address
-        ####ConnectionsInfoResource
         with self.write_lock, self.conn:
             self.conn.execute(
                 'INSERT INTO crosstransaction_events(identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, state_change_id, hash_r,r) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (identifier, initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, status, 0, "", ""),
             )
 
-        print(identifier)
         return  identifier
 
     def create_lnd(self, port, identity, address, macaroon):
@@ -343,8 +330,6 @@ class SQLiteStorage:
                 (identifier, entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], status, entry[8], entry[9], entry[10]),
             )
 
-        print("success")
-
 
     def get_crosstransaction_by_r(self, hash_r):
         cursor = self.conn.cursor()
@@ -354,9 +339,6 @@ class SQLiteStorage:
         )
 
         res = cursor.fetchall()[0]
-
-
-
         return res
 
 

@@ -639,13 +639,6 @@ class RaidenService:
         amount = cross_data[4]
         target = cross_data[2]
         btc_amount = cross_data[5]
-
-        #payment_network_identifier = self.default_registry.address
-        # token_network_identifier = views.get_token_network_identifier_by_token_address(
-        #     views.state_from_raiden(self),
-        #     payment_network_identifier,
-        #     token_address,
-        # )
         token_network_identifier = cross_data[3]
 
         self.transport.start_health_check(target)
@@ -660,23 +653,20 @@ class RaidenService:
             token_network_identifier,
             target,
         )
-        print("xxjj", init_initiator_statechange)
+        print("init_initiator_statechange: ", init_initiator_statechange)
         self.handle_cross_state_change(init_initiator_statechange, cross_id, secret, btc_amount)
 
 
-
-    ###demo
     def get_crosstransaction_by_crossid(self,cross_id):
         res= self.wal.get_crosstransaction_by_identifier(cross_id)
         res = list(res)
         res[1] = to_normalized_address(res[1])
         res[2] = to_normalized_address(res[2])
         res[3] = to_normalized_address(res[3])
-        print(res)
+    
         return  res
     def get_crosstransaction_all(self):
         res = self.wal.get_all_crosstransaction()
-        print(res)
 
         return  res
 
@@ -687,20 +677,10 @@ class RaidenService:
         event_list = self.wal.log_and_dispatch(state_change, block_number)
 
         row = self.wal.storage.get_lnd(1)
-        # macaroon_path = "/home/litexdev/lnd_nodes/node{}/admin.macaroon".format(node)
-
-        #   # to do lnd string
-        # with open(macaroon_path, 'rb') as f:
-        #     fb = f.read()
-        # macaroon = fb.decode('utf-8')
-        # macaroon = macaroon[:-1]
         macaroon = row[4]
-        print("macaroon: ", macaroon)
         lnd_url = "https://{}/v1/invoices".format(self.config['lnd_address'])
-        print("lnd_url: ", lnd_url)
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         lnd_r = base64.b64encode(secret)
-        print("lnd_r:", lnd_r)
         lnd_data = {'value':btc_amount, 'r_preimage':lnd_r.decode('utf-8'), 'type':"CROSS_CHAIN_INVOICE"}
 
         res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(lnd_data), verify=False)
@@ -708,12 +688,8 @@ class RaidenService:
         res_json = res.json()
         lnd_r_hash = res_json['r_hash']
         lnd_payment_request = res_json['payment_request']
-        print('get lnd_r_hash^^^^^^^^^^^^^^^^^^^^:', lnd_r_hash)
+        print('send invoice succ, lnd_r_hash:', lnd_r_hash)
 
-
-
-        # lnd_r_hash = "example"
-        # lnd_payment_request = "example"
 
         for event in event_list:
             log.debug('RAIDEN EVENT', node=pex(self.address), raiden_event=event)
@@ -721,25 +697,13 @@ class RaidenService:
             if type(event) == SendLockedTransfer:
                 locked_transfer_message = message_from_sendevent(event, self.address)
                 self.sign(locked_transfer_message)
-                print("loked_tr_mess", locked_transfer_message.to_dict())
                 self.wal.storage.change_crosstransaction_r(cross_id, encode_hex(locked_transfer_message.lock.secrethash), lnd_r_hash)
-                print('after change r')
-               # print(self.wal.get_crosstransaction_by_identifier(message.cross_id))
-                print('recieve from lnd:', lnd_r_hash, '/n', lnd_payment_request)
                 tmp_r_hash = base64.b64decode(lnd_r_hash)
                 raiden_r_hash = locked_transfer_message.lock.secrethash
                 hex_r_hash = encode_hex(tmp_r_hash)
-                print('raiden r hash:', encode_hex(raiden_r_hash))
-                print('lnd r hash after decode:', hex_r_hash)
                 lnd_string = bytes(lnd_payment_request, "utf-8")
-                #lnd_string = bytes("hello world this is lnd_string","utf-8")
                 cross_transfer_message = CrossLockedTransfer(locked_transfer_message, cross_id, lnd_string)
-                print('cross_message ok')
                 self.sign(cross_transfer_message)
-                print('corss_message sign ok')
-
-
-
                 self.transport.send_async(
                     cross_transfer_message.recipient,
                     bytes("456",'utf-8'),
@@ -774,25 +738,16 @@ class RaidenService:
                     cross_secret_request_message,
                 )
                 continue
-
-
-
             on_raiden_event(self, event)
 
         return event_list
 
     def send_payment_request(self, lnd_string):
         row = self.wal.storage.get_lnd(1)
-        # macaroon_path = "/home/litexdev/lnd_nodes/node{}/admin.macaroon".format(node)
-        # with open(macaroon_path, 'rb') as f:
-        #     fb = f.read()
-        # macaroon = fb.decode('utf-8')
-        # macaroon = macaroon[:-1]
         macaroon = row[4]
         lnd_url = "https://{}/v1/channels/transactions".format(self.config['lnd_address'])
         lnd_headers = {'Grpc-Metadata-macaroon':macaroon}
         data = {'payment_request':lnd_string}
-        print("before send payment request to lnd")
         res = requests.post(lnd_url, headers=lnd_headers, data=json.dumps(data), verify=False)
         if res.status_code == 200:
             print("send payment request to lnd succ")

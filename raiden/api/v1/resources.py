@@ -204,9 +204,6 @@ class ConnectionsInfoResource(BaseResource):
 
 
 
-
-################sqlite_demo
-
 class CrossTransactionTry(BaseResource):
     post_schema = TransferSchema(
         only=('initiator_address', 'sendETH_amount', 'sendBTC_amount','cross_type'),

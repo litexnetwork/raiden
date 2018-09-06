@@ -69,19 +69,6 @@ class WriteAheadLog:
             self.storage.write_state_snapshot(state_change_id, current_state)
 
     def create_crosstransactiontry(self,initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address,identifier):
-        """ Log and apply a state change.
-
-        This function will first write the state change to the write-ahead-log,
-        in case of a node crash the state change can be recovered and replayed
-        to restore the node state.
-
-        Events produced by applying state change are also saved.
-        """
-
-        ###events = self.state_manager.dispatch(state_change)
-        ###identifier = sha3(initiator_address + target_address + receiveBTC_address)
-        ###initiator_address = raiden.api.v1.resources.AddressResource.get(self)
-
         res = self.storage.create_crosstransaction(initiator_address, target_address, token_address, sendETH_amount, sendBTC_amount, receiveBTC_address, 1,identifier)
 
         return res
@@ -116,57 +103,3 @@ class WriteAheadLog:
     @property
     def version(self):
         return self.storage.get_version()
-
-'''
-class CrossTransaction:
-    def __init__(self, state_manager, storage):
-        self.state_manager = state_manager
-        self.state_change_id = None
-        self.storage = storage
-
-    def create_crosstransactiontry(self,initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address):
-        """ Log and apply a state change.
-
-        This function will first write the state change to the write-ahead-log,
-        in case of a node crash the state change can be recovered and replayed
-        to restore the node state.
-
-        Events produced by applying state change are also saved.
-        """
-
-        ###events = self.state_manager.dispatch(state_change)
-        ###identifier = sha3(initiator_address + target_address + receiveBTC_address)
-        ###initiator_address = raiden.api.v1.resources.AddressResource.get(self)
-
-        res = self.storage.create_crosstransaction(initiator_address, target_address, sendETH_amount, sendBTC_amount, receiveBTC_address, 1)
-
-        return res
-
-    def get_all_crosstransaction(self):
-        """ Snapshot the application state.
-
-        Snapshots are used to restore the application state, either after a
-        restart or a crash.
-        """
-        transactions = self.storage.get_all_crosstransaction()
-        return transactions
-
-    def get_crosstransaction_by_identifier(self,identifier):
-        """ Snapshot the application state.
-
-        Snapshots are used to restore the application state, either after a
-        restart or a crash.
-        """
-        transactions = self.storage.get_crosstransaction_by_identifier(identifier)
-        return transactions
-
-    def change_crosstransaction_status(self,identifier,status):
-        """ Snapshot the application state.
-
-        Snapshots are used to restore the application state, either after a
-        restart or a crash.
-        """
-        transactions = self.storage.change_crosstransaction_status(identifier,status)
-        return transactions
-'''
-

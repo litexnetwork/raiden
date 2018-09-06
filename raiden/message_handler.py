@@ -124,7 +124,6 @@ def handle_message_directtransfer(raiden: RaidenService, message: DirectTransfer
 
 def handle_message_lockedtransfer(raiden: RaidenService, message: LockedTransfer):
     if message.target == raiden.address:
-        print(message.to_dict())
         raiden.target_mediated_transfer(message)
     else:
         raiden.mediate_mediated_transfer(message)
@@ -135,27 +134,18 @@ def handle_message_processed(raiden: RaidenService, message: Processed):
     raiden.handle_state_change(processed)
 
 def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransaction):
-    print("recive crosstransaction")
-
     cross_type = message.cross_type
     if cross_type==1:
         raiden.wal.create_crosstransactiontry(message.initiator_address, message.target_address, message.token_network_identifier, message.sendETH_amount, message.sendBTC_amount, message.receiveBTC_address,message.identifier)
-        print("get data from database")
-        print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
-
+        raiden.wal.change_crosstransaction_status(message.identifier, 2)
         accept=1
         acceptcross = AcceptCross(random.randint(0, UINT64_MAX),message.initiator_address,message.target_address,message.identifier,accept)
-        print("creat accept ok")
         raiden.sign(acceptcross)
-        print("creat sign ok")
-        print(to_normalized_address(message.initiator_address))
         raiden.transport.send_async(
             message.initiator_address,
             bytes("123", 'utf-8'),
             acceptcross,
         )
-        print((acceptcross.to_dict()))
-        print("send accept ok")
     else:
         message.cross_type = 1
         async_result = raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.receiveBTC_address,message.cross_type,message.identifier)
@@ -188,15 +178,10 @@ def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
             result.set(True)
 
         del raiden.identifier_to_results[message.identifier]
-        print("recieve async message")
         return
 
-    print("recive acceptcross")
-    print("message's accept is %s",(message.accept))
+
     raiden.wal.change_crosstransaction_status(message.identifier, 3)
-    print("get data from database")
-    print(raiden.wal.get_crosstransaction_by_identifier(message.identifier))
-    print('start_send_crosstransfer')
     raiden.start_send_crosstansfer(message.identifier)
 
 
@@ -225,16 +210,10 @@ def handle_message_crosslockedtransfer(raiden:RaidenService,message:CrossLockedT
 
         raiden.wal.change_crosstransaction_status(message.cross_id, 4)
         raiden.wal.storage.change_crosstransaction_r(message.cross_id, encode_hex(locked_transfer_message.lock.secrethash), "")
-        print("get data from database aft change r")
-        print(raiden.wal.get_crosstransaction_by_identifier(message.cross_id))
-        print("get lnd_string is %",(message.lnd_string.decode()))
 
         #to do send lnd string to lnd
         lnd_string = message.lnd_string.decode('utf-8')
         raiden.send_payment_request(lnd_string)
-
-
-
     else:
         handle_message_lockedtransfer(raiden, locked_transfer_message)
 
@@ -259,19 +238,13 @@ def handle_message_crosssecretrequest(raiden, message):
     )
 
     row = raiden.wal.get_crosstransaction_by_identifier(message.cross_id)
-    if row[7] == 8:
+    if row[7] == 6:
         raiden.handle_state_change(state_change)
+        raiden.wal.change_crosstransaction_status(message.cross_id, 8)
     else:
+        raiden.wal.change_crosstransaction_status(message.cross_id, 5)
         state_change_id = raiden.wal.storage.write_state_change(state_change)
-        print('state_change_id', state_change_id)
-        print('write state change to db', state_change)
         raiden.wal.storage.change_crosstransaction_statechangeid(message.cross_id, state_change_id)
-
-
-    # print('befor handle message_secretrequest')
-    # handle_message_secretrequest(raiden, secret_request_message)
-    # print('after handle message_secretrequest')
-
 
 
 
@@ -298,10 +271,8 @@ def on_message(raiden: RaidenService, message: Message):
     elif type(message) == AcceptCross:
         handle_message_acceptcross(raiden,message)
     elif type(message) == CrossLockedTransfer:
-        print('handle is ok')
         handle_message_crosslockedtransfer(raiden, message)
     elif type(message) == CrossSecretRequest:
-        print('recieve cross secret request')
         handle_message_crosssecretrequest(raiden, message)
     else:
         log.error('Unknown message cmdid {}'.format(message.cmdid))

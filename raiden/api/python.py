@@ -750,8 +750,6 @@ class RaidenAPI:
     def get_crosstransaction_by_id(self,cross_id):
         return self.raiden.get_crosstransaction_by_crossid(cross_id)
 
-
-
     def get_crosstransaction_all(self):
         return self.raiden.get_crosstransaction_all()
 
@@ -760,17 +758,16 @@ class RaidenAPI:
 
     def get_state_change_by_r(self, r):
         try:
-            #todo
-            print('recieve hash_R from lnd^^^^^^^^^^^^^^^:', r)
+            print('recieve hash_R from lnd:', r)
             row = self.raiden.wal.storage.get_crosstransaction_by_r(r)
             state_change_id = row[8]
             cross_id = row[0]
             if state_change_id == 0:
-                self.raiden.wal.storage.change_crosstransaction_status(cross_id, 8)
+                self.raiden.wal.storage.change_crosstransaction_status(cross_id, 6)
             else:
                 state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
-                print("get state change from db", state_change)
                 self.raiden.handle_state_change(state_change)
+                self.raiden.wal.change_crosstransaction_status(cross_id, 8)
             return  {"success":True,"reason":"null"}
         except :
             return  {"sucess":False,"reason":"hash_r is error"}
