@@ -149,7 +149,7 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
     else:
         message.cross_type = 1
         async_result = raiden.start_crosstransaction(message.token_network_identifier,message.initiator_address,message.target_address,message.sendETH_amount,message.sendBTC_amount,message.receiveBTC_address,message.cross_type,message.identifier)
-        
+
         # return async_result.wait(timeout=None)
 
         # if message.cross_type == 0:
@@ -170,14 +170,10 @@ def handle_message_crosstransaction(raiden: RaidenService, message : Crosstransa
 
 
 def handle_message_acceptcross(raiden:RaidenService,message:AcceptCross):
-
-    # for async
-    if message.accept == 8:
-
-        for result in raiden.identifier_to_results[message.identifier]:
-            result.set(True)
-
-        del raiden.identifier_to_results[message.identifier]
+    # for sync
+    if message.accept == 7:
+        raiden.wal.change_crosstransaction_status(message.identifier, 8)
+        log.info('##sync received')
         return
 
 
@@ -241,6 +237,15 @@ def handle_message_crosssecretrequest(raiden, message):
     if row[7] == 6:
         raiden.handle_state_change(state_change)
         raiden.wal.change_crosstransaction_status(message.cross_id, 8)
+        #sync
+        acceptcross = AcceptCross(random.randint(0, UINT64_MAX),row[1],row[2],message.cross_id,7)
+        raiden.sign(acceptcross)
+        raiden.transport.send_async(
+            row[2],
+            bytes("123", 'utf-8'),
+            acceptcross,
+        )
+        log.info('##sync sended')
     else:
         raiden.wal.change_crosstransaction_status(message.cross_id, 5)
         state_change_id = raiden.wal.storage.write_state_change(state_change)

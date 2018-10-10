@@ -41,6 +41,14 @@ from raiden.utils import (
     typing,
 )
 from raiden.api.rest import hexbytes_to_str, encode_byte_values
+from raiden.messages import (
+    AcceptCross,
+)
+import random
+from raiden.constants import (
+    UINT256_MAX,
+    UINT64_MAX,
+)
 
 log = structlog.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -768,6 +776,15 @@ class RaidenAPI:
                 state_change = self.raiden.wal.storage.get_cross_state_change_by_identifier(state_change_id)
                 self.raiden.handle_state_change(state_change)
                 self.raiden.wal.change_crosstransaction_status(cross_id, 8)
+                #sync
+                acceptcross = AcceptCross(random.randint(0, UINT64_MAX), row[1], row[2], cross_id, 7)
+                self.raiden.sign(acceptcross)
+                self.raiden.transport.send_async(
+                    row[2],
+                    bytes("123", 'utf-8'),
+                    acceptcross,
+                )
+                log.info('##sync sended')
             return  {"success":True,"reason":"null"}
         except :
             return  {"sucess":False,"reason":"hash_r is error"}
